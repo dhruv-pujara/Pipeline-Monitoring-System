@@ -2,6 +2,8 @@
 // "use client"
 
 // import * as React from "react"
+// import { useState } from "react"
+// import { useRouter } from "next/navigation"
 // import { Moon, Sun } from "lucide-react"
 // import { useTheme } from "next-themes"
 // import { ThemeProvider } from "@/components/theme-provider"
@@ -61,6 +63,21 @@
 
 // // Main Component
 // export default function TabsDemo() {
+//   const router = useRouter()
+//   const [role, setRole] = useState<string | undefined>()
+
+//   const handleLogin = () => {
+//     if (role === "admin") {
+//       router.push("/admin")
+//     } else if (role === "client") {
+//       router.push("/client")
+//     } else if (role === "inspector") {
+//       router.push("/inspector")
+//     } else {
+//       alert("Please select a role.")
+//     }
+//   }
+
 //   return (
 //     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 //       <div className="relative flex h-screen items-center justify-center bg-background text-foreground">
@@ -78,7 +95,7 @@
 //               <CardContent className="space-y-4">
 //                 <div className="space-y-1">
 //                   <Label htmlFor="role">Select Role</Label>
-//                   <Select>
+//                   <Select onValueChange={(value) => setRole(value)}>
 //                     <SelectTrigger id="role">
 //                       <SelectValue placeholder="Choose role" />
 //                     </SelectTrigger>
@@ -99,7 +116,7 @@
 //                 </div>
 //               </CardContent>
 //               <CardFooter className="flex justify-center">
-//                 <Button>Log In</Button>
+//                 <Button onClick={handleLogin}>Log In</Button>
 //               </CardFooter>
 //             </Card>
 //           </TabsContent>
@@ -109,8 +126,8 @@
 //   )
 // }
 
-
 "use client"
+import { useEffect} from "react";
 
 import * as React from "react"
 import { useState } from "react"
@@ -173,7 +190,7 @@ function ModeToggle() {
 }
 
 // Main Component
-export default function TabsDemo() {
+export default function LoginPage() {
   const router = useRouter()
   const [role, setRole] = useState<string | undefined>()
 
@@ -188,51 +205,73 @@ export default function TabsDemo() {
       alert("Please select a role.")
     }
   }
+  
+  const { theme } = useTheme();
+  const [imageSrc, setImageSrc] = useState("/black.png");
+
+  useEffect(() => {
+    setImageSrc(theme === "dark" ? "/white.png" : "/black.png");
+  }, [theme]);
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="relative flex h-screen items-center justify-center bg-background text-foreground">
-        <ModeToggle />
-        <Tabs defaultValue="account" className="w-[400px]">
-          <TabsContent value="account">
-            <Card>
-              <CardHeader className="text-center">
-                <CardTitle>Welcome to PipeX!</CardTitle>
-                <CardDescription>
-                  Real-time pipeline inspection and monitoring—  
-                  Precision, safety, and control at your fingertips.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="role">Select Role</Label>
-                  <Select onValueChange={(value) => setRole(value)}>
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Choose role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="client">Client</SelectItem>
-                      <SelectItem value="inspector">Inspector</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="name">Username</Label>
-                  <Input id="name" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" />
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-center">
-                <Button onClick={handleLogin}>Log In</Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
+      <div className="flex h-screen">
+        {/* Left Section */}
+        <div className="hidden md:flex w-1/2 items-center justify-center transition-all bg-black dark:bg-white text-white dark:text-black">
+        <img 
+        src={imageSrc} 
+        alt="Logo" 
+        className="max-w-full max-h-full object-cover"
+        />
+        </div>
+
+      
+
+        {/* Right Section */}
+        <div className="w-full md:w-1/2 flex items-center justify-center bg-background text-foreground">
+          <ModeToggle />
+          <Tabs defaultValue="account" className="w-[400px]">
+            <TabsContent value="account">
+              <Card>
+                <CardHeader className="text-center">
+                  <CardTitle>Welcome to PipeX!</CardTitle>
+                  <CardDescription>
+                    Real-time pipeline inspection and monitoring—  
+                    Precision, safety, and control at your fingertips.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="role">Select Role</Label>
+                    <Select onValueChange={(value) => setRole(value)}>
+                      <SelectTrigger id="role">
+                        <SelectValue placeholder="Choose role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="inspector">Inspector</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="name">Username</Label>
+                    <Input id="name" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="password">Password</Label>
+                    <Input id="password" type="password" />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-center">
+                  <Button onClick={handleLogin}>Log In</Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </ThemeProvider>
   )
 }
+
