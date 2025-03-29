@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/ui/app-sidebar"
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <AppSidebar />
+       <AppSidebar role="inspector" />
       <main className="p-8">
         <SidebarTrigger />
         <h1 className="text-4xl font-bold mb-6 text-center">

@@ -1,4 +1,72 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+// import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+
+// import {
+//   Sidebar,
+//   SidebarContent,
+//   SidebarGroup,
+//   SidebarGroupContent,
+//   SidebarGroupLabel,
+//   SidebarMenu,
+//   SidebarMenuButton,
+//   SidebarMenuItem,
+// } from "@/components/ui/sidebar"
+
+// // Menu items.
+// const items = [
+//   {
+//     title: "Home",
+//     url: "#",
+//     icon: Home,
+//   },
+//   {
+//     title: "Inbox",
+//     url: "#",
+//     icon: Inbox,
+//   },
+//   {
+//     title: "Calendar",
+//     url: "#",
+//     icon: Calendar,
+//   },
+//   {
+//     title: "Search",
+//     url: "#",
+//     icon: Search,
+//   },
+//   {
+//     title: "Settings",
+//     url: "#",
+//     icon: Settings,
+//   },
+// ]
+
+// export function AppSidebar() {
+//   return (
+//     <Sidebar>
+//       <SidebarContent>
+//         <SidebarGroup>
+//           <SidebarGroupLabel>Application</SidebarGroupLabel>
+//           <SidebarGroupContent>
+//             <SidebarMenu>
+//               {items.map((item) => (
+//                 <SidebarMenuItem key={item.title}>
+//                   <SidebarMenuButton asChild>
+//                     <a href={item.url}>
+//                       <item.icon />
+//                       <span>{item.title}</span>
+//                     </a>
+//                   </SidebarMenuButton>
+//                 </SidebarMenuItem>
+//               ))}
+//             </SidebarMenu>
+//           </SidebarGroupContent>
+//         </SidebarGroup>
+//       </SidebarContent>
+//     </Sidebar>
+//   )
+// }
+
+import { Calendar, Home, Inbox, Search, Settings, Users } from "lucide-react"
 
 import {
   Sidebar,
@@ -11,36 +79,31 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-]
+interface AppSidebarProps {
+  role: "admin" | "client" | "inspector"
+}
 
-export function AppSidebar() {
+const menuItems = {
+  admin: [
+    { title: "Dashboard", url: "/admin/dashboard", icon: Home },
+    { title: "Users", url: "/admin/users", icon: Users },
+    { title: "Settings", url: "/admin/settings", icon: Settings },
+  ],
+  client: [
+    { title: "Home", url: "/client/home", icon: Home },
+    { title: "Appointments", url: "/client/calendar", icon: Calendar },
+    { title: "Search", url: "/client/search", icon: Search },
+  ],
+  inspector: [
+    { title: "Home", url: "/inspector/home", icon: Home },
+    { title: "Inspections", url: "/inspector/inbox", icon: Inbox },
+    { title: "Calendar", url: "/inspector/calendar", icon: Calendar },
+  ],
+}
+
+export function AppSidebar({ role }: AppSidebarProps) {
+  const items = menuItems[role]
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -52,7 +115,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a href={item.url}>
-                      <item.icon />
+                      <item.icon className="w-5 h-5" />
                       <span>{item.title}</span>
                     </a>
                   </SidebarMenuButton>
@@ -65,3 +128,4 @@ export function AppSidebar() {
     </Sidebar>
   )
 }
+
