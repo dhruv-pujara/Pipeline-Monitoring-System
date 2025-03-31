@@ -1,17 +1,32 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/ui/app-sidebar"
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+import { AppSidebar } from "@/components/ui/app-sidebar"
+import { ChartAreaInteractive } from "@/components/ui/chart-area-interactive"
+import { SectionCards } from "@/components/ui/section-cards"
+import { SiteHeader } from "@/components/ui/site-header"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+
+
+
+export default function Page() {
   return (
     <SidebarProvider>
-       <AppSidebar role="client" />
-      <main className="p-8">
-        <SidebarTrigger />
-        <h1 className="text-4xl font-bold mb-6 text-center">
-          Welcome to Client Page
-        </h1>
-        {children}
-      </main>
+      <AppSidebar role="client" />
+      {/* <AppSidebar variant="inset" /> */}
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <SectionCards />
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
+              </div>
+            
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
     </SidebarProvider>
   )
 }
+
