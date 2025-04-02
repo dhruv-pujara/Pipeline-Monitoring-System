@@ -8,7 +8,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 export default function Page() {
   return (
     <SidebarProvider>
-      <AppSidebar variant="inset" />
+      <AppSidebar role="admin" />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
