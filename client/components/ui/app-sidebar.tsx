@@ -184,56 +184,56 @@ const data = {
 
 // 👇 Role-based navMain options
 const navMainByRole = {
-  client: [
+  owner: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/owner",
       icon: LayoutDashboardIcon,
     },
     {
       title: "Pipelines",
-      url: "#",
+      url: "/owner/pipelines",
       icon: FolderIcon,
     },
     {
       title: "Inspection",
-      url: "#",
+      url: "/owner/inspections",
       icon: CameraIcon,
     },
   ],
   inspector: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/inspector",
       icon: LayoutDashboardIcon,
     },
     {
       title: "Report",
-      url: "#",
+      url: "/inspector/reports",
       icon: FileTextIcon,
     },
   ],
   admin: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/admin",
       icon: LayoutDashboardIcon,
     },
     {
       title: "Inspections",
-      url: "#",
+      url: "/admin/inspections",
       icon: ClipboardListIcon,
     },
     {
       title: "Reports",
-      url: "#",
+      url: "/admin/reports",
       icon: FileTextIcon,
     },
   ],
 }
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  role: "client" | "inspector" | "admin"
+  role: "owner" | "inspector" | "admin"
 }
 
 export function AppSidebar({ role, ...props }: AppSidebarProps) {
