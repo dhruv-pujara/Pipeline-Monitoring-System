@@ -1,17 +1,14 @@
-
 import { AppSidebar } from "@/components/ui/app-sidebar"
 import { ChartAreaInteractive } from "@/components/ui/chart-area-interactive"
+import { DataTable } from "@/components/ui/data-table"
 import { SectionCards } from "@/components/ui/section-cards"
 import { SiteHeader } from "@/components/ui/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
-
-
 export default function Page() {
   return (
     <SidebarProvider>
-      <AppSidebar role="client" />
-      {/* <AppSidebar variant="inset" /> */}
+      <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">
@@ -21,7 +18,6 @@ export default function Page() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-            
             </div>
           </div>
         </div>
@@ -29,4 +25,3 @@ export default function Page() {
     </SidebarProvider>
   )
 }
-
