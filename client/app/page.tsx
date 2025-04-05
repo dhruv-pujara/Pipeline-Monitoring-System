@@ -197,8 +197,8 @@ export default function LoginPage() {
   const handleLogin = () => {
     if (role === "admin") {
       router.push("/admin")
-    } else if (role === "client") {
-      router.push("/client")
+    } else if (role === "owner") {
+      router.push("/owner")
     } else if (role === "inspector") {
       router.push("/inspector")
     } else {
@@ -249,7 +249,7 @@ export default function LoginPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="client">Client</SelectItem>
+                        <SelectItem value="owner">Owner</SelectItem>
                         <SelectItem value="inspector">Inspector</SelectItem>
                       </SelectContent>
                     </Select>
