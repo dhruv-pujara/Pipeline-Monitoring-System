@@ -43,7 +43,7 @@ export function NavUser({
 
   const handleLogout = () => {
     // Perform any logout logic here (e.g., clear tokens, reset session)
-    router.push("/") // Redirect to login page
+    router.push("/login") // Redirect to login page
   }
 
   return (
