@@ -1,54 +1,41 @@
 import * as React from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
-import { TaskList } from "@/components/ui/task-list";
-import { PipelineMap } from "@/components/ui/pipeline-map";
-import { InspectionReport } from "@/components/ui/inspection-report";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-export default function InspectorDashboard({ children }: { children?: React.ReactNode }) {
-  // Sample task data for demonstration
-  const sampleTasks = [
+export default function InspectorDashboard() {
+  // Sample tasks data for assigned inspections
+  const tasks = [
     {
       id: 1,
-      title: "Inspect Pipeline A",
-      description: "Check for leaks and corrosion",
-      completed: false,
+      task: "Inspect Pipeline A",
+      description: "Inspection for leaks and rust",
+      assignedTo: "Inspector John",
+      status: "Pending",
     },
     {
       id: 2,
-      title: "Review Inspection Report",
-      description: "Analyze findings from yesterday",
-      completed: true,
-    },
-    // Add more tasks as needed
-  ];
-
-  // Sample pipeline data for map display
-  const samplePipelines = [
-    {
-      id: 1,
-      name: "Pipeline A",
-      status: "Pending Inspection",
-      location: { lat: 40.7128, lng: -74.0060 },
+      task: "Inspect Pipeline B",
+      description: "Visual inspection completed",
+      assignedTo: "Inspector Jane",
+      status: "Completed",
     },
     {
-      id: 2,
-      name: "Pipeline B",
-      status: "Inspected",
-      location: { lat: 34.0522, lng: -118.2437 },
+      id: 3,
+      task: "Inspect Pipeline C",
+      description: "Scheduled inspection pending",
+      assignedTo: "Inspector Alex",
+      status: "Assigned",
     },
-    // Add more pipelines as needed
   ];
-
-  // Sample inspection report data
-  const sampleReport = {
-    inspectedCount: 1,
-    pendingCount: 1,
-    remarks: "One pipeline still pending inspection. Further analysis required on Pipeline A.",
-  };
-
-  // Additional details (e.g., notifications, upcoming tasks, etc.)
-  const additionalDetails = "Additional status messages and upcoming inspection alerts will appear here.";
 
   return (
     <SidebarProvider>
@@ -56,34 +43,34 @@ export default function InspectorDashboard({ children }: { children?: React.Reac
       <main className="p-8 space-y-8">
         <SidebarTrigger />
         <h1 className="text-4xl font-bold mb-6 text-center">
-          Welcome to Inspector Page
+          Inspector Dashboard
         </h1>
 
-        {/* Task List Section */}
+        {/* Tasks Table Section */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Task List</h2>
-          <TaskList tasks={sampleTasks} />
+          <h2 className="text-2xl font-semibold mb-4">Assigned Inspections</h2>
+          <Table>
+            <TableCaption>A list of your assigned inspections.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[150px]">Task</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Assigned To</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tasks.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.task}</TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>{item.assignedTo}</TableCell>
+                  <TableCell>{item.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </section>
-
-        {/* Pipeline Map Section */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Pipeline Map</h2>
-          <PipelineMap pipelines={samplePipelines} />
-        </section>
-
-        {/* Inspection Report Section */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Inspection Report</h2>
-          <InspectionReport report={sampleReport} />
-        </section>
-
-        {/* Additional Details Section */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Additional Details</h2>
-          <p>{additionalDetails}</p>
-        </section>
-
-        {children}
       </main>
     </SidebarProvider>
   );
