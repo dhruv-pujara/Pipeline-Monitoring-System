@@ -1,46 +1,3 @@
-// import express from "express"
-// import mysql from "mysql"
-
-// const app = express()
-// const db= mysql.createConnection({
-//     host:"localhost",
-//     user:"root",
-//     password:"",
-//     database:"PIPELINE_SYSTEM"
-// })
-
-// app.get("/", (req, res) => {
-//     res.json("hello this is the backend")
-// })
-
-// app.get("/Login", (req, res) => {
-//     const q = "SELECT * FROM Login"
-//     db.query(q, (err, data) => {
-//         if(err) return res.json(err)
-//         return res.json(data)
-//     })
-// })
-
-// app.post("/Login", (req, res) => {
-//     const q = "INSERT INTO Login (`name`, `username`,`email`,`phone`,`password`, `role`) VALUES (?)"
-//     const values = [
-//         req.body.name,
-//         req.body.username,
-//         req.
-//         req.body.email,
-//         req.body.password
-//     ]
-
-//     db.query(q, [values], (err, data) => {
-//         if(err) return res.json(err)
-//         return res.json("Login has been created successfully")
-//     })
-// })
-
-// app.listen(8800, () => {
-//     console.log("Backend server is running!!")
-// })
-
 import express from "express"
 import mysql from "mysql"
 import bcrypt from "bcryptjs"
@@ -58,12 +15,12 @@ const db = mysql.createConnection({
     database: "PIPELINE_SYSTEM",
 })
 
-// 📌 Test API
+// Test API
 app.get("/", (req, res) => {
     res.json("Hello! This is the backend.")
 })
 
-// ✅ Register User (Signup)
+// Register User (Signup)
 app.post("/register", async (req, res) => {
     const { name, username, email, phone, password, role } = req.body
 
@@ -79,7 +36,7 @@ app.post("/register", async (req, res) => {
     })
 })
 
-// ✅ Login API (Authenticate User)
+// Login API (Authenticate User)
 app.post("/login", (req, res) => {
     const { username, password } = req.body
     const q = "SELECT * FROM Login WHERE username = ?"
@@ -118,7 +75,7 @@ function authenticateToken(req, res, next) {
     })
 }
 
-// ✅ Start Server
+// Start Server
 app.listen(8800, () => {
     console.log("Backend server is running on port 8800!!")
 })
