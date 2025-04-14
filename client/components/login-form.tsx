@@ -60,11 +60,11 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="username"
+                  type="username"
+                  placeholder="john.doe"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -74,12 +74,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
+                  
                 </div>
                 <Input
                   id="password"
