@@ -1,6 +1,7 @@
 import * as React from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
+import { SiteHeader } from "@/components/ui/site-header";
 import {
   Table,
   TableBody,
@@ -40,38 +41,43 @@ export default function InspectorDashboard() {
   return (
     <SidebarProvider>
       <AppSidebar role="inspector" />
-      <main className="p-8 space-y-8">
-        <SidebarTrigger />
-        <h1 className="text-4xl font-bold mb-6 text-center">
-          Inspector Dashboard
-        </h1>
-
-        {/* Tasks Table Section */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Assigned Inspections</h2>
-          <Table>
-            <TableCaption>A list of your assigned inspections.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">Task</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Assigned To</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasks.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.task}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell>{item.assignedTo}</TableCell>
-                  <TableCell>{item.status}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </section>
-      </main>
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <div className="px-4 lg:px-6">
+                <h1 className="text-2xl font-bold">Inspector Dashboard</h1>
+              </div>
+              {/* Tasks Table Section */}
+              <section className="px-4 lg:px-6">
+                <h2 className="text-2xl font-semibold mb-4">Assigned Inspections</h2>
+                <Table>
+                  <TableCaption>A list of your assigned inspections.</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[150px]">Task</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Assigned To</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tasks.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.task}</TableCell>
+                        <TableCell>{item.description}</TableCell>
+                        <TableCell>{item.assignedTo}</TableCell>
+                        <TableCell>{item.status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </section>
+            </div>
+          </div>
+        </div>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
