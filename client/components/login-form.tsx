@@ -15,22 +15,52 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const router = useRouter()
   const [role, setRole] = useState<string | undefined>()
   const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!role) {
-      alert("Please select a role.")
-      return
-    }
-    if (role === "admin") {
-      router.push("/admin")
-    } else if (role === "owner") {
-      router.push("/owner")
-    } else if (role === "inspector") {
-      router.push("/inspector")
+  
+    try {
+      const res = await fetch("http://localhost:8800/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      })
+  
+      const data = await res.json()
+  
+      if (!res.ok) {
+        alert(data.error || "Login failed")
+        return
+      }
+  
+      localStorage.setItem("token", data.token)
+      alert("Login successful")
+  
+      // Redirect based on data.role from the backend (NOT the dropdown selection)
+      if (data.role === "Admin") {
+        router.push("/admin")
+      } else if (data.role === "Owner") {
+        router.push("/owner")
+      } else if (data.role === "Inspector") {
+        router.push("/inspector")
+      } else {
+        alert("Unknown role, please contact admin.")
+      }
+  
+    } catch (err) {
+      console.error("Login error:", err)
+      alert("Something went wrong.")
     }
   }
+  
+
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -60,13 +90,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="email">Username</Label>
+                <Label htmlFor="usernam">Username</Label>
                 <Input
                   id="username"
                   type="username"
                   placeholder="john.doe"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
