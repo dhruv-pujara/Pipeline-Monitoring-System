@@ -1,30 +1,23 @@
-import { AppSidebar } from "@/components/ui/app-sidebar"
-import { ChartAreaInteractive } from "@/components/ui/chart-area-interactive"
-import { DataTable } from "@/components/ui/data-table"
-import { SectionCards } from "@/components/ui/section-cards"
-import { SiteHeader } from "@/components/ui/site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+"use client";
 
-export default function Page() {
+import * as React from "react";
+import { AppSidebar } from "@/components/ui/app-sidebar";
+import { SiteHeader } from "@/components/ui/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ReportIssueCard } from "@/components/ui/report-issue-card";
+
+export default function ReportsPage() {
   return (
     <SidebarProvider>
       <AppSidebar role="inspector" />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              <div className="px-4 lg:px-6">
-                <h1 className="text-2xl font-bold">Reports</h1>
-              </div>
-              <SectionCards />
-              <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
-              </div>
-            </div>
-          </div>
-        </div>
+        <main className="flex flex-col gap-6 px-4 lg:px-6 py-8">
+          <h1 className="text-2xl font-bold">Reports</h1>
+          <ReportIssueCard />
+          {/* You can add additional report-related UI here */}
+        </main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
