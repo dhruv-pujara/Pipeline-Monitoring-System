@@ -65,7 +65,6 @@ export default function Page() {
                             ))}
                           </nav>
                         </aside>
-
                         <div className="flex-1 lg:max-w-2xl space-y-6">
                           <div>
                             <h3 className="text-lg font-medium">Profile</h3>

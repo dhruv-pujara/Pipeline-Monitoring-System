@@ -17,9 +17,8 @@ export default function Page() {
               <div className="px-4 lg:px-6">
                 <h1 className="text-2xl font-bold">Pipeline</h1>
               </div>
-              <SectionCards />
               <div className="px-4 lg:px-6">
-                <ChartAreaInteractive />
+                <h1>dfdfgf</h1>
               </div>
             </div>
           </div>
