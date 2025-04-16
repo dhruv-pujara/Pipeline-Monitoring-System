@@ -158,6 +158,7 @@ import {
   FileTextIcon,
   FolderIcon,
   LayoutDashboardIcon,
+  Proportions,
   ListIcon,
   UsersIcon,
 } from "lucide-react"
@@ -210,6 +211,11 @@ const navMainByRole = {
     {
       title: "Report",
       url: "/inspector/reports",
+      icon: Proportions,
+    },
+    {
+      title: "View Files",
+      url: "/inspector/viewfiles",
       icon: FileTextIcon,
     },
   ],
