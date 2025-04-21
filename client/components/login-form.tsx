@@ -114,7 +114,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   required
                 />
               </div>
-
               <Button type="submit" className="w-full">
                 Login
               </Button>

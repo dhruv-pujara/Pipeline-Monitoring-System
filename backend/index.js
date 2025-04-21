@@ -1,4 +1,3 @@
-
 import express from "express"
 import mysql from "mysql"
 import jwt from "jsonwebtoken"
@@ -48,7 +47,7 @@ app.post("/login", (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
-    // return res.status(200).json({ message: "Login successful", token, role: user.role })
+    return res.status(200).json({ message: "Login successful", token, role: user.role })
   })
 })
 
