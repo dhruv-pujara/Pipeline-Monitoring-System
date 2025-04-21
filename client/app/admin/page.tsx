@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { useState, useEffect } from "react"
 import { AppSidebar } from "@/components/ui/app-sidebar"
 import { SiteHeader } from "@/components/ui/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'; // Shadcn UI Table components
+
 
 export default function Page() {
   const [activeForm, setActiveForm] = useState("create")
@@ -208,6 +220,7 @@ type User = {
 
 function UpdateUserForm() {
   const [form, setForm] = useState({
+    id:'',
     name: '',
     username: '',
     email: '',
@@ -218,6 +231,31 @@ function UpdateUserForm() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<User[]>([]); // Explicitly set the type here as User[]
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const res = await fetch("http://localhost:8800/users")
+  
+        // 1) Parse the JSON into a temporary `any`
+        const json: any = await res.json()
+  
+        // 2) If the response wasn’t OK, handle the error shape
+        if (!res.ok) {
+          // assume your server returns { error: string }
+          throw new Error(json.error || "Failed to fetch users")
+        }
+  
+        // 3) Now you know it’s really an array of User
+        const users: User[] = json
+        setUsers(users)
+  
+      } catch (err) {
+        console.error("Error loading users:", err)
+      }
+    }
+    loadUsers()
+  }, [])
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -233,9 +271,8 @@ function UpdateUserForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle the form submission logic here (e.g., API call to update the user)
     try {
-      const res = await fetch('http://localhost:8800/updateUser', {
+      const res = await fetch('http://localhost:8800/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -252,115 +289,142 @@ function UpdateUserForm() {
     }
   };
 
+  function setRole(val: string): void {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <>
       <h3 className="text-lg font-medium">Update User</h3>
-      <form className="space-y-4" onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded-md"
-          required
-        />
-        <input
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded-md"
-          required
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded-md"
-          required
-        />
-        <input
-          name="phone"
-          placeholder="Phone"
-          value={form.phone}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded-md"
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded-md"
-          required
-        />
-        <select
-          name="role"
-          value={form.role}
-          onChange={handleChange}
-          className="w-full border px-3 py-2 rounded-md"
-          required
-        >
-          <option value="" disabled hidden>
-            Role
-          </option>
-          <option value="owner">Owner</option>
-          <option value="admin">Admin</option>
-          <option value="inspector">Inspector</option>
-        </select>
-        <Button type="submit" className="px-4 py-2">
-          Update
-        </Button>
-      </form>
+      {/* … your update form markup … */}
 
       {/* Search Input */}
-      <div className="mt-6">
-        <input
-          placeholder="Search User"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="w-full border px-3 py-2 rounded-md"
+      <input
+        placeholder="Search User"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full border px-3 py-2 rounded-md my-4"
+      />
+
+      {/* User Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Full Name</TableHead>
+            <TableHead>Username</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>Password</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Created_At</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users
+            .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map(u => (
+              <TableRow key={u.id}>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>{u.username}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.role}</TableCell>
+                <TableCell>
+                  <Button onClick={() => { /* populate form for editing */ }}>
+                    Edit
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          }
+        </TableBody>
+      </Table>
+
+      <div>
+        <Label htmlFor="name">ID</Label>
+        <Input
+          id="id"
+          name="id"
+          value={form.id}
+          onChange={handleChange}
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="name">Full Name</Label>
+        <Input
+          id="name"
+          name="name"
+          value={form.name}
+          onChange={handleChange}
         />
       </div>
 
-      {/* Shadcn UI Table */}
-      <div className="mt-6">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-4 py-2">Full Name</TableHead>
-              <TableHead className="px-4 py-2">Username</TableHead>
-              <TableHead className="px-4 py-2">Email</TableHead>
-              <TableHead className="px-4 py-2">Role</TableHead>
-              <TableHead className="px-4 py-2">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users
-              .filter((user) => user.name.toLowerCase().includes(searchTerm.toLowerCase())) // Filter users based on search term
-              .map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="px-4 py-2">{user.name}</TableCell>
-                  <TableCell className="px-4 py-2">{user.username}</TableCell>
-                  <TableCell className="px-4 py-2">{user.email}</TableCell>
-                  <TableCell className="px-4 py-2">{user.role}</TableCell>
-                  <TableCell className="px-4 py-2">
-                    <Button className="px-2 py-1" onClick={() => { /* Set form values for update */ }}>
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+      <div>
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          name="username"
+          value={form.username}
+          onChange={handleChange}
+        />
       </div>
-    </>
-  );
-}
 
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="phone">Phone</Label>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          value={form.phone}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="role">Role</Label>
+        <Select
+          value={form.role}
+          onValueChange={(val) => setRole(val)}
+        >
+          <SelectTrigger id="role" name="role">
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="user">Owner</SelectItem>
+              <SelectItem value="user">Inspector</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+    </>
+  )
+}
 
 
 function DeleteUserForm() {
