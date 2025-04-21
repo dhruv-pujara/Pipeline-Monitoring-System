@@ -429,8 +429,6 @@ function UpdateUserForm() {
   )
 }
 
-
-
 function DeleteUserForm() {
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState('')
