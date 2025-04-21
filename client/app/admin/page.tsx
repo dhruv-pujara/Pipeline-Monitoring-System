@@ -422,19 +422,65 @@ function UpdateUserForm() {
         </Select>
       </div>
 
+
+      <button className="bg-destructive text-white px-4 py-2 rounded-md">Update</button>
+
     </>
   )
 }
 
 
+
 function DeleteUserForm() {
+  const [users, setUsers] = useState<User[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [idToDelete, setIdToDelete] = useState('')
   return (
     <>
       <h3 className="text-lg font-medium">Delete User</h3>
+
       <form className="space-y-6">
         <input placeholder="User ID to delete" className="w-full border px-3 py-2 rounded-md" />
-        <button className="bg-destructive text-white px-4 py-2 rounded-md">Delete</button>
+     
       </form>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Full Name</TableHead>
+            <TableHead>Username</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Phone</TableHead>
+            <TableHead>Password</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Created_At</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users
+            .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map(u => (
+              <TableRow key={u.id}>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>{u.username}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.role}</TableCell>
+                <TableCell>
+                  <Button onClick={() => { /* populate form for editing */ }}>
+                    Edit
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          }
+        </TableBody>
+      </Table>
+
+      <button className="bg-destructive text-white px-4 py-2 rounded-md">Delete</button>
+
+
+  
     </>
   )
 }
