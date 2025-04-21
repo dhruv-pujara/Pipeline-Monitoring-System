@@ -17,6 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 type Pipeline = {
   PipelineID: number;
@@ -289,20 +291,29 @@ export default function ViewPipelinesPage() {
                       }))
                     }
                   />
-                  <select
-                    className="col-span-2"
-                    value={newPipeline.Status}
-                    onChange={(e) =>
-                      setNewPipeline((prev) => ({
-                        ...prev,
-                        Status: e.target.value,
-                      }))
-                    }
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="UnderMaintenance">Under Maintenance</option>
-                  </select>
+                  
+                  {/* ShadCN Status Dropdown */}
+                  <div className="col-span-2">
+                    <Select
+                      value={newPipeline.Status}
+                      onValueChange={(value) =>
+                        setNewPipeline((prev) => ({
+                          ...prev,
+                          Status: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Under Maintenance">Under Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Input
                     type="date"
                     value={newPipeline.InstallationDate ?? ""}
