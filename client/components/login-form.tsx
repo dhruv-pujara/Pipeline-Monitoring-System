@@ -1,6 +1,4 @@
-
 'use client'
-
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -10,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter()
@@ -114,7 +114,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   required
                 />
               </div>
-
               <Button type="submit" className="w-full">
                 Login
               </Button>
@@ -138,4 +137,3 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     </div>
   )
 }
-

@@ -1,4 +1,3 @@
-
 import express from "express"
 import mysql from "mysql"
 import jwt from "jsonwebtoken"
@@ -52,6 +51,34 @@ app.post("/login", (req, res) => {
   })
 })
 
+// GET /users → returns all rows from the Login table
+app.get("/users", (req, res) => {
+  const q = `
+    SELECT
+      id,
+      name,
+      username,
+      email,
+      phone,
+      role,
+      created_at
+    FROM \`Login\`
+    ORDER BY id
+  `;
+
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("DB error fetching users:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    // results is an array of { id, name, username, … }
+    res.json(results);
+  });
+});
+
+
+
+
 // Protected Dashboard Route (requires token)
 app.get("/dashboard", authenticateToken, (req, res) => {
   res.json({ message: "Welcome to the Dashboard", user: req.user })
@@ -73,3 +100,4 @@ function authenticateToken(req, res, next) {
 app.listen(8800, () => {
   console.log("Backend server is running on port 8800!!")
 })
+
