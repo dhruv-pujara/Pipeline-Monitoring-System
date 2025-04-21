@@ -117,7 +117,7 @@ function CreateUserForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       })
-
+  
       const data = await res.json()
       if (res.ok) {
         alert("User registered successfully")
