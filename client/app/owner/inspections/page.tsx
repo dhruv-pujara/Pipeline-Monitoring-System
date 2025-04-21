@@ -29,8 +29,7 @@ type ReportFile = {
 
 export default function ViewFilesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-
-  const files: ReportFile[] = [
+  const [files, setFiles] = useState<ReportFile[]>([
     {
       inspectionID: 1,
       pipelineID: 1001,
@@ -71,7 +70,41 @@ export default function ViewFilesPage() {
       inspectionDate: "2025-03-10",
       findings: "Slight deformation in pipe bend area.",
     },
-  ];
+  ]);
+
+  const [showForm, setShowForm] = useState(false);
+  const [newFile, setNewFile] = useState<Partial<ReportFile>>({
+    inspectionID: undefined,
+    pipelineID: undefined,
+    inspectorID: undefined,
+    segmentID: undefined,
+    inspectionDate: "",
+    findings: "",
+  });
+
+  const handleAddFile = () => {
+    const { inspectionID, pipelineID, inspectorID, segmentID } = newFile;
+    if (
+      !inspectionID ||
+      !pipelineID ||
+      !inspectorID ||
+      !segmentID
+    ) {
+      alert("Please fill in all ID fields.");
+      return;
+    }
+
+    setFiles((prev) => [...prev, newFile as ReportFile]);
+    setNewFile({
+      inspectionID: undefined,
+      pipelineID: undefined,
+      inspectorID: undefined,
+      segmentID: undefined,
+      inspectionDate: "",
+      findings: "",
+    });
+    setShowForm(false);
+  };
 
   const filteredFiles = files.filter((file) => {
     const query = searchQuery.toLowerCase();
@@ -100,17 +133,17 @@ export default function ViewFilesPage() {
             />
             <Button onClick={() => setSearchQuery("")}>Clear</Button>
           </div>
+
           <div className="relative overflow-x-auto">
             <Table>
-              <TableCaption>
-                A list of recent inspection reports.
-              </TableCaption>
+              <TableCaption>A list of recent inspection reports.</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Pipeline ID</TableHead>
                   <TableHead>Inspector ID</TableHead>
                   <TableHead>Segment ID</TableHead>
                   <TableHead>Inspection Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -124,11 +157,32 @@ export default function ViewFilesPage() {
                       <TableCell>{file.inspectorID}</TableCell>
                       <TableCell>{file.segmentID}</TableCell>
                       <TableCell>{file.inspectionDate}</TableCell>
+                      <TableCell>
+                      <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            const confirmed = window.confirm(
+                              `Are you sure you want to delete inspection #${file.inspectionID}?`
+                            );
+                            if (confirmed) {
+                              setFiles((prev) =>
+                                prev.filter((f) => f.inspectionID !== file.inspectionID)
+                              );
+                            }
+                          }}
+                        >
+                          Delete
+                      </Button>
+
+                      </TableCell>
 
                       {/* Hover Card */}
                       <div className="absolute z-10 left-0 top-0 translate-x-full w-80 p-4 bg-white border rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                         <Card className="p-4 space-y-2">
-                          <div className="font-bold text-lg">Inspection #{file.inspectionID}</div>
+                          <div className="font-bold text-lg">
+                            Inspection #{file.inspectionID}
+                          </div>
                           <div className="text-sm">
                             <strong>Pipeline:</strong> {file.pipelineID}
                           </div>
@@ -150,13 +204,95 @@ export default function ViewFilesPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">
+                    <TableCell colSpan={5} className="text-center">
                       No reports found.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Add New Entry Section */}
+          <div className="mt-6">
+            {!showForm ? (
+              <Button onClick={() => setShowForm(true)}>Add New Entry</Button>
+            ) : (
+              <div className="space-y-4 bg-muted p-4 rounded-xl max-w-2xl">
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    type="number"
+                    placeholder="Inspection ID"
+                    value={newFile.inspectionID ?? ""}
+                    onChange={(e) =>
+                      setNewFile((prev) => ({
+                        ...prev,
+                        inspectionID: parseInt(e.target.value),
+                      }))
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Pipeline ID"
+                    value={newFile.pipelineID ?? ""}
+                    onChange={(e) =>
+                      setNewFile((prev) => ({
+                        ...prev,
+                        pipelineID: parseInt(e.target.value),
+                      }))
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Inspector ID"
+                    value={newFile.inspectorID ?? ""}
+                    onChange={(e) =>
+                      setNewFile((prev) => ({
+                        ...prev,
+                        inspectorID: parseInt(e.target.value),
+                      }))
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Segment ID"
+                    value={newFile.segmentID ?? ""}
+                    onChange={(e) =>
+                      setNewFile((prev) => ({
+                        ...prev,
+                        segmentID: parseInt(e.target.value),
+                      }))
+                    }
+                  />
+                  <Input
+                    type="date"
+                    value={newFile.inspectionDate ?? ""}
+                    onChange={(e) =>
+                      setNewFile((prev) => ({
+                        ...prev,
+                        inspectionDate: e.target.value,
+                      }))
+                    }
+                  />
+                  <Input
+                    placeholder="Findings"
+                    value={newFile.findings ?? ""}
+                    onChange={(e) =>
+                      setNewFile((prev) => ({
+                        ...prev,
+                        findings: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <Button onClick={handleAddFile}>Add Entry</Button>
+                  <Button variant="outline" onClick={() => setShowForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </SidebarInset>
