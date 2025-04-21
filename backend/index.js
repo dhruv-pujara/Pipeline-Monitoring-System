@@ -53,25 +53,12 @@ app.post("/login", (req, res) => {
 
 // GET /users → returns all rows from the Login table
 app.get("/users", (req, res) => {
-  const q = `
-    SELECT
-      id,
-      name,
-      username,
-      email,
-      phone,
-      role,
-      created_at
-    FROM \`Login\`
-    ORDER BY id
-  `;
-
-  db.query(q, (err, results) => {
+  const q1 = " SELECT * FROM Login ORDER BY id ";
+  db.query(q1, (err, results) => {
     if (err) {
       console.error("DB error fetching users:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    // results is an array of { id, name, username, … }
     res.json(results);
   });
 });

@@ -321,23 +321,29 @@ function UpdateUserForm() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users
-            .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
-            .map(u => (
-              <TableRow key={u.id}>
-                <TableCell>{u.name}</TableCell>
-                <TableCell>{u.username}</TableCell>
-                <TableCell>{u.email}</TableCell>
-                <TableCell>{u.role}</TableCell>
-                <TableCell>
-                  <Button onClick={() => { /* populate form for editing */ }}>
-                    Edit
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          }
-        </TableBody>
+  {users
+    .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .map(u => (
+      <TableRow key={u.id}>
+        <TableCell>{u.id}</TableCell>
+        <TableCell>{u.name}</TableCell>
+        <TableCell>{u.username}</TableCell>
+        <TableCell>{u.email}</TableCell>
+        <TableCell>{u.phone || '-'}</TableCell>
+        <TableCell>••••••••</TableCell> {/* password is not returned from backend */}
+        <TableCell>{u.role}</TableCell>
+        <TableCell>{(u as any).created_at || '-'}</TableCell>
+        <TableCell>
+          <Button onClick={() => { /* populate form for editing */ }}>
+            Edit
+          </Button>
+        </TableCell>
+      </TableRow>
+    ))
+  }
+</TableBody>
+
+ 
       </Table>
 
       <div>
