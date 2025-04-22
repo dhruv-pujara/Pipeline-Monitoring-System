@@ -132,62 +132,6 @@ function authenticateToken(req, res, next) {
   })
 }
 
-// ---------------- Inspection Endpoints ---------------- //
-
-// Get all assigned inspections for an inspector
-app.get("/inspections", (req, res) => {
-  const inspectorID = Number(req.query.inspectorID)
-  const q = `
-    SELECT InspectionID, PipelineID, InspectorID, SegmentID, InspectionDate, Findings
-      FROM INSPECTION
-     WHERE InspectorID = ?
-     ORDER BY InspectionID
-  `
-  db.query(q, [inspectorID], (err, results) => {
-    if (err) {
-      console.error("DB error fetching inspections:", err)
-      return res.status(500).json({ error: "Database error" })
-    }
-    res.json(results)
-  })
-})
-
-// Get completed inspections (date & findings not null)
-app.get("/inspections/completed", (req, res) => {
-  const q = `
-    SELECT InspectionID, PipelineID, InspectorID, SegmentID, InspectionDate, Findings
-      FROM INSPECTION
-     WHERE InspectionDate IS NOT NULL
-       AND Findings IS NOT NULL
-     ORDER BY InspectionID
-  `
-  db.query(q, (err, results) => {
-    if (err) {
-      console.error("DB error fetching completed inspections:", err)
-      return res.status(500).json({ error: "Database error" })
-    }
-    res.json(results)
-  })
-})
-
-// Add a new issue (auto-generated IssueID)
-app.post("/issues", (req, res) => {
-  const { inspectionID, issueType, severity } = req.body
-  const q = `
-    INSERT INTO ISSUE (InspectionID, IssueType, Severity)
-    VALUES (?, ?, ?)
-  `
-  db.query(q, [inspectionID, issueType, severity], (err, result) => {
-    if (err) {
-      console.error("DB error inserting issue:", err)
-      return res.status(500).json({ error: "Database error" })
-    }
-    res.status(201).json({ success: true, issueID: result.insertId })
-  })
-})
-
-// ---------------- Inspection Endpoints ---------------- //
-
 // Start server
 app.listen(8800, () => {
   console.log("Backend server is running on port 8800!!")

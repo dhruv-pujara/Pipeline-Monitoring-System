@@ -20,93 +20,73 @@ interface Inspection {
   PipelineID: number;
   InspectorID: number;
   SegmentID: number;
-  InspectionDate: string;
-  Findings: string;
+  InspectionDate: string | null;
+  Findings: string | null;
 }
 
 export default function ReportsPage() {
+  // TODO: pull this from your auth/session
+  const inspectorID = 201;
+
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [selected, setSelected] = useState<Inspection | null>(null);
 
   useEffect(() => {
-    // <<< DUMMY DATA FOR REPORTS >>>
-    const dummyReports: Inspection[] = [
-      {
-        InspectionID: 1001,
-        PipelineID:   501,
-        InspectorID:  201,
-        SegmentID:    11,
-        InspectionDate: "2025-04-10",
-        Findings:      "No leaks found. All valves operating normally.",
-      },
-      {
-        InspectionID: 1002,
-        PipelineID:   502,
-        InspectorID:  201,
-        SegmentID:    22,
-        InspectionDate: "2025-04-12",
-        Findings:      "Minor corrosion at joint #4. Recommended touch‑up.",
-      },
-      {
-        InspectionID: 1003,
-        PipelineID:   503,
-        InspectorID:  201,
-        SegmentID:    33,
-        InspectionDate: "2025-04-15",
-        Findings:      "Pressure drop detected. Blockage cleared.",
-      },
-    ];
-
-    // Only keep “completed” ones (Findings non‑empty)
-    setInspections(dummyReports.filter((r) => Boolean(r.Findings)));
-  }, []);
+    fetch(`http://localhost:8800/inspections?inspectorID=${inspectorID}`)
+      .then((res) => res.json())
+      .then((data: Inspection[]) => {
+        // keep only those with both date + findings set
+        const completed = data.filter(
+          (i) => i.InspectionDate !== null && i.Findings !== null
+        );
+        setInspections(completed);
+      })
+      .catch((err) =>
+        console.error("Error fetching completed inspections:", err)
+      );
+  }, [inspectorID]);
 
   return (
     <SidebarProvider>
       <AppSidebar role="inspector" />
       <SidebarInset>
         <SiteHeader />
-        <div className="p-8 bg-black text-white flex flex-col gap-6">
+        <div className="p-8 flex flex-col gap-6">
           {!selected ? (
             <>
               <h1 className="text-2xl font-bold">Completed Inspections</h1>
-              <Table className="bg-black text-white">
-                <TableCaption className="text-white">
-                  Click one to report issues
-                </TableCaption>
+              <Table>
+                <TableCaption>Click an inspection to report issues</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-white">ID</TableHead>
-                    <TableHead className="text-white">Pipeline</TableHead>
-                    <TableHead className="text-white">Segment</TableHead>
-                    <TableHead className="text-white">Inspector</TableHead>
-                    <TableHead className="text-white">Date</TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Pipeline</TableHead>
+                    <TableHead>Segment</TableHead>
+                    <TableHead>Inspector</TableHead>
+                    <TableHead>Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {inspections.map((insp) => (
                     <TableRow
                       key={insp.InspectionID}
-                      className="cursor-pointer bg-black hover:bg-gray-800 transition-colors"
+                      className="cursor-pointer hover:bg-gray-100"
                       onClick={() => setSelected(insp)}
                     >
-                      <TableCell className="text-white">
-                        {insp.InspectionID}
-                      </TableCell>
-                      <TableCell className="text-white">
-                        {insp.PipelineID}
-                      </TableCell>
-                      <TableCell className="text-white">
-                        {insp.SegmentID}
-                      </TableCell>
-                      <TableCell className="text-white">
-                        {insp.InspectorID}
-                      </TableCell>
-                      <TableCell className="text-white">
-                        {insp.InspectionDate}
-                      </TableCell>
+                      <TableCell>{insp.InspectionID}</TableCell>
+                      <TableCell>{insp.PipelineID}</TableCell>
+                      <TableCell>{insp.SegmentID}</TableCell>
+                      <TableCell>{insp.InspectorID}</TableCell>
+                      <TableCell>{insp.InspectionDate}</TableCell>
                     </TableRow>
                   ))}
+                  {inspections.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">
+                        No completed inspections found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </>
@@ -117,7 +97,7 @@ export default function ReportsPage() {
               </h1>
               <ReportIssueCard inspectionID={selected.InspectionID} />
               <button
-                className="mt-4 text-sm text-gray-400 underline"
+                className="mt-4 text-sm text-gray-500 underline"
                 onClick={() => setSelected(null)}
               >
                 ← Back to list
