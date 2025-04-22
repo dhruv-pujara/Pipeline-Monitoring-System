@@ -31,6 +31,15 @@ app.post("/register", (req, res) => {
   })
 })
 
+app.get("/inspections", authenticateToken, (req, res) => {
+  const q = "SELECT * FROM INSPECTION"
+  
+  db.query(q, (err, results) => {
+    if (err) return res.status(500).json(err)
+    return res.status(200).json(results)  // Send the inspection data to the frontend
+  })
+})
+
 // Login API
 app.post("/login", (req, res) => {
   const { username, password } = req.body
@@ -135,6 +144,83 @@ function authenticateToken(req, res, next) {
     next()
   })
 }
+
+// Get all pipelines
+app.get("/pipelines", authenticateToken, (req, res) => {
+  const q = "SELECT * FROM PIPELINE";
+  
+  db.query(q, (err, results) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json(results);
+  });
+});
+
+
+// Add a new pipeline
+app.post("/pipelines", authenticateToken, (req, res) => {
+  const { Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude } = req.body;
+  
+  const q = "INSERT INTO PIPELINE (Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude) VALUES (?)";
+  const values = [Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude];
+  
+  db.query(q, [values], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(201).json({ message: "Pipeline added successfully" });
+  });
+});
+
+
+// Delete a pipeline
+app.delete("/pipelines/:id", authenticateToken, (req, res) => {
+  const pipelineId = req.params.id;
+  
+  const q = "DELETE FROM PIPELINE WHERE PipelineID = ?";
+  
+  db.query(q, [pipelineId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json({ message: "Pipeline deleted successfully" });
+  });
+});
+
+
+// Get all segments
+app.get("/segments", authenticateToken, (req, res) => {
+  const q = "SELECT * FROM SEGMENT";
+  
+  db.query(q, (err, results) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json(results);
+  });
+});
+
+
+// Add a new segment
+app.post("/segments", authenticateToken, (req, res) => {
+  const {PipelineID, PressureLevel, FlowRate, LastModifiedDate } = req.body;
+  
+  const q = "INSERT INTO SEGMENT (PipelineID, PressureLevel, FlowRate, LastModifiedDate) VALUES (?)";
+  const values = [ PipelineID, PressureLevel, FlowRate, LastModifiedDate];
+  
+  db.query(q, [values], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(201).json({ message: "Segment added successfully" });
+  });
+});
+
+
+// Delete a segment
+app.delete("/segments/:id", authenticateToken, (req, res) => {
+  const segmentId = req.params.id;
+  
+  const q = "DELETE FROM SEGMENT WHERE SegmentID = ?";
+  
+  db.query(q, [segmentId], (err, data) => {
+    if (err) return res.status(500).json(err);
+    return res.status(200).json({ message: "Segment deleted successfully" });
+  });
+});
+
+
 
 // Start server
 app.listen(8800, () => {

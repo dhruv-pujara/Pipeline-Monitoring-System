@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
@@ -18,101 +17,47 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 
-type ReportFile = {
-  inspectionID: number;
-  pipelineID: number;
-  inspectorID: number;
-  segmentID: number;
-  inspectionDate: string;
-  findings: string;
+type Inspection = {
+  InspectionID: number;
+  PipelineID: number;
+  InspectorID: number;
+  SegmentID: number;
+  InspectionDate: string; // ISO string
+  Findings: string;
 };
 
 export default function ViewFilesPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [files, setFiles] = useState<ReportFile[]>([
-    {
-      inspectionID: 1,
-      pipelineID: 1001,
-      inspectorID: 501,
-      segmentID: 301,
-      inspectionDate: "2025-04-01",
-      findings: "Minor corrosion found near segment joint.",
-    },
-    {
-      inspectionID: 2,
-      pipelineID: 1002,
-      inspectorID: 502,
-      segmentID: 302,
-      inspectionDate: "2025-03-28",
-      findings: "Valve wear within acceptable limits.",
-    },
-    {
-      inspectionID: 3,
-      pipelineID: 1003,
-      inspectorID: 503,
-      segmentID: 303,
-      inspectionDate: "2025-03-20",
-      findings: "No significant issues detected.",
-    },
-    {
-      inspectionID: 4,
-      pipelineID: 1004,
-      inspectorID: 504,
-      segmentID: 304,
-      inspectionDate: "2025-03-15",
-      findings: "Oil residue detected near inspection port.",
-    },
-    {
-      inspectionID: 5,
-      pipelineID: 1005,
-      inspectorID: 505,
-      segmentID: 305,
-      inspectionDate: "2025-03-10",
-      findings: "Slight deformation in pipe bend area.",
-    },
-  ]);
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [showForm, setShowForm] = useState(false);
-  const [newFile, setNewFile] = useState<Partial<ReportFile>>({
-    inspectionID: undefined,
-    pipelineID: undefined,
-    inspectorID: undefined,
-    segmentID: undefined,
-    inspectionDate: "",
-    findings: "",
-  });
+  useEffect(() => {
+    const fetchInspections = async () => {
+      const token = localStorage.getItem("token") || "";
+      try {
+        const res = await fetch("http://localhost:8800/inspections", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const data: Inspection[] = await res.json();
+        setInspections(data);
+      } catch (err) {
+        console.error("Error fetching inspections:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInspections();
+  }, []);
 
-  const handleAddFile = () => {
-    const { inspectionID, pipelineID, inspectorID, segmentID } = newFile;
-    if (
-      !inspectionID ||
-      !pipelineID ||
-      !inspectorID ||
-      !segmentID
-    ) {
-      alert("Please fill in all ID fields.");
-      return;
-    }
-
-    setFiles((prev) => [...prev, newFile as ReportFile]);
-    setNewFile({
-      inspectionID: undefined,
-      pipelineID: undefined,
-      inspectorID: undefined,
-      segmentID: undefined,
-      inspectionDate: "",
-      findings: "",
-    });
-    setShowForm(false);
-  };
-
-  const filteredFiles = files.filter((file) => {
-    const query = searchQuery.toLowerCase();
+  const filtered = inspections.filter((insp) => {
+    const q = searchQuery.toLowerCase();
     return (
-      file.pipelineID.toString().includes(query) ||
-      file.inspectorID.toString().includes(query) ||
-      file.inspectionDate.toLowerCase().includes(query) ||
-      file.findings.toLowerCase().includes(query)
+      insp.PipelineID.toString().includes(q) ||
+      insp.InspectorID.toString().includes(q) ||
+      insp.SegmentID.toString().includes(q) ||
+      insp.InspectionDate.substring(0, 10).includes(q) ||
+      insp.Findings.toLowerCase().includes(q)
     );
   });
 
@@ -134,166 +79,73 @@ export default function ViewFilesPage() {
             <Button onClick={() => setSearchQuery("")}>Clear</Button>
           </div>
 
-          <div className="relative overflow-x-auto">
-            <Table>
-              <TableCaption>A list of recent inspection reports.</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Pipeline ID</TableHead>
-                  <TableHead>Inspector ID</TableHead>
-                  <TableHead>Segment ID</TableHead>
-                  <TableHead>Inspection Date</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredFiles.length > 0 ? (
-                  filteredFiles.map((file) => (
-                    <TableRow
-                      key={file.inspectionID}
-                      className="relative group hover:bg-muted cursor-pointer"
-                    >
-                      <TableCell>{file.pipelineID}</TableCell>
-                      <TableCell>{file.inspectorID}</TableCell>
-                      <TableCell>{file.segmentID}</TableCell>
-                      <TableCell>{file.inspectionDate}</TableCell>
-                      <TableCell>
-                      <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            const confirmed = window.confirm(
-                              `Are you sure you want to delete inspection #${file.inspectionID}?`
-                            );
-                            if (confirmed) {
-                              setFiles((prev) =>
-                                prev.filter((f) => f.inspectionID !== file.inspectionID)
-                              );
-                            }
-                          }}
-                        >
-                          Delete
-                      </Button>
-
-                      </TableCell>
-
-                      {/* Hover Card */}
-                      <div className="absolute z-10 left-0 top-0 translate-x-full w-80 p-4 bg-white border rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                        <Card className="p-4 space-y-2">
-                          <div className="font-bold text-lg">
-                            Inspection #{file.inspectionID}
-                          </div>
-                          <div className="text-sm">
-                            <strong>Pipeline:</strong> {file.pipelineID}
-                          </div>
-                          <div className="text-sm">
-                            <strong>Segment:</strong> {file.segmentID}
-                          </div>
-                          <div className="text-sm">
-                            <strong>Inspector:</strong> {file.inspectorID}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            <strong>Date:</strong> {file.inspectionDate}
-                          </div>
-                          <div className="text-sm">
-                            <strong>Findings:</strong> {file.findings}
-                          </div>
-                        </Card>
-                      </div>
-                    </TableRow>
-                  ))
-                ) : (
+          {loading ? (
+            <p>Loading…</p>
+          ) : (
+            <div className="relative overflow-x-auto mt-6">
+              <Table>
+                <TableCaption>A list of recent inspection reports.</TableCaption>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      No reports found.
-                    </TableCell>
+                    <TableHead>Pipeline ID</TableHead>
+                    <TableHead>Inspector ID</TableHead>
+                    <TableHead>Segment ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Findings</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filtered.length > 0 ? (
+                    filtered.map((insp) => (
+                      <TableRow
+                        key={insp.InspectionID}
+                        className="relative group hover:bg-muted cursor-pointer"
+                      >
+                        <TableCell>{insp.PipelineID}</TableCell>
+                        <TableCell>{insp.InspectorID}</TableCell>
+                        <TableCell>{insp.SegmentID}</TableCell>
+                        <TableCell>
+                          {insp.InspectionDate.substring(0, 10)}
+                        </TableCell>
+                        <TableCell>{insp.Findings}</TableCell>
 
-          {/* Add New Entry Section */}
-          <div className="mt-6">
-            {!showForm ? (
-              <Button onClick={() => setShowForm(true)}>Add New Entry</Button>
-            ) : (
-              <div className="space-y-4 bg-muted p-4 rounded-xl max-w-2xl">
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    type="number"
-                    placeholder="Inspection ID"
-                    value={newFile.inspectionID ?? ""}
-                    onChange={(e) =>
-                      setNewFile((prev) => ({
-                        ...prev,
-                        inspectionID: parseInt(e.target.value),
-                      }))
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Pipeline ID"
-                    value={newFile.pipelineID ?? ""}
-                    onChange={(e) =>
-                      setNewFile((prev) => ({
-                        ...prev,
-                        pipelineID: parseInt(e.target.value),
-                      }))
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Inspector ID"
-                    value={newFile.inspectorID ?? ""}
-                    onChange={(e) =>
-                      setNewFile((prev) => ({
-                        ...prev,
-                        inspectorID: parseInt(e.target.value),
-                      }))
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Segment ID"
-                    value={newFile.segmentID ?? ""}
-                    onChange={(e) =>
-                      setNewFile((prev) => ({
-                        ...prev,
-                        segmentID: parseInt(e.target.value),
-                      }))
-                    }
-                  />
-                  <Input
-                    type="date"
-                    value={newFile.inspectionDate ?? ""}
-                    onChange={(e) =>
-                      setNewFile((prev) => ({
-                        ...prev,
-                        inspectionDate: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    placeholder="Findings"
-                    value={newFile.findings ?? ""}
-                    onChange={(e) =>
-                      setNewFile((prev) => ({
-                        ...prev,
-                        findings: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <Button onClick={handleAddFile}>Add Entry</Button>
-                  <Button variant="outline" onClick={() => setShowForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+                        {/* Hover Card */}
+                        <div className="absolute z-10 left-0 top-0 translate-x-full w-80 p-4 bg-white border rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                          <Card className="p-4 space-y-2">
+                            <div className="font-bold text-lg">
+                              Inspection #{insp.InspectionID}
+                            </div>
+                            <div className="text-sm">
+                              <strong>Pipeline:</strong> {insp.PipelineID}
+                            </div>
+                            <div className="text-sm">
+                              <strong>Segment:</strong> {insp.SegmentID}
+                            </div>
+                            <div className="text-sm">
+                              <strong>Inspector:</strong> {insp.InspectorID}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              <strong>Date:</strong>{" "}
+                              {insp.InspectionDate.substring(0, 10)}
+                            </div>
+                            <div className="text-sm">
+                              <strong>Findings:</strong> {insp.Findings}
+                            </div>
+                          </Card>
+                        </div>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">
+                        No reports found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </main>
       </SidebarInset>
     </SidebarProvider>
