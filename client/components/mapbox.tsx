@@ -14,8 +14,8 @@ export default function MapboxPipelineMap() {
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v11",
-      center: [-114.0719, 51.0447], // Default to Calgary
-      zoom: 9,
+      center: [-115.0, 54.0],
+      zoom: 5,
     });
 
     return () => map.remove();
