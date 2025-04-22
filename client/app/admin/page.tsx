@@ -222,7 +222,6 @@ type User = {
   password: string;
 };
 
-
 function UpdateUserForm() {
   const [form, setForm] = useState({
     id: '',

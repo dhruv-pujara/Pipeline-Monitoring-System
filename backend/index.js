@@ -51,7 +51,7 @@ app.post("/login", (req, res) => {
   })
 })
 
-// GET /users → returns all rows from the Login table
+// To get all users in the database
 app.get("/users", (req, res) => {
   const q1 = "SELECT id, name, username, email, phone, password_hash AS password, role, created_at FROM Login ORDER BY id";
   db.query(q1, (err, results) => {
@@ -91,7 +91,7 @@ app.post("/update", (req, res) => {
   });
 });
 
-
+// To delete a user 
 app.post("/delete", (req, res) => {
   const { id } = req.body;
 
