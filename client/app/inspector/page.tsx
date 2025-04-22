@@ -1,107 +1,124 @@
 "use client";
 
-import * as React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
 import {
   Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableCaption,
 } from "@/components/ui/table";
 import {
   Card,
   CardHeader,
+  CardTitle,
   CardContent,
   CardFooter,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-type Task = {
-  id: number;
-  task: string;
-  description: string;
-  assignedTo: string;
-  status: string;
-  pipelineSection: string;
-  location: string;
-  lastInspection: string;
-  nextInspection: string;
-  maintenanceHistory: string;
-  criticalIssues: string;
-  recommendedAction: string;
-  additionalNotes: string;
-};
+interface Inspection {
+  InspectionID: number;
+  PipelineID: number;
+  InspectorID: number;
+  SegmentID: number;
+  InspectionDate: string | null;
+  Findings: string | null;
+  instructions: string;
+}
 
 export default function InspectorDashboard() {
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const inspectorID = 201;
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [selected, setSelected] = useState<Inspection | null>(null);
 
-  // Expanded sample tasks data with more detailed fields.
-  const tasks: Task[] = [
-    {
-      id: 1,
-      task: "Inspect Pipeline A",
-      description:
-        "Perform a detailed check for leaks, corrosion, and pressure abnormalities along Pipeline A. Verify instrument readings and inspect for any structural weaknesses.",
-      assignedTo: "Inspector John",
-      status: "Pending",
-      pipelineSection: "Section 1-5",
-      location: "North Field",
-      lastInspection: "2025-04-01",
-      nextInspection: "2025-04-15",
-      maintenanceHistory: "Minor leak patched on 2025-03-20",
-      criticalIssues: "Minor leak near a joint and early signs of corrosion.",
-      recommendedAction: "Schedule preventive maintenance and re-inspect in 2 weeks.",
-      additionalNotes: "Monitor pressure sensors closely for any deviations.",
-    },
-    {
-      id: 2,
-      task: "Inspect Pipeline B",
-      description:
-        "Visual inspection completed for Pipeline B. Additional checks on valve integrity and joint wear are recommended.",
-      assignedTo: "Inspector Jane",
-      status: "Completed",
-      pipelineSection: "Section 6-10",
-      location: "East Field",
-      lastInspection: "2025-03-28",
-      nextInspection: "2025-04-12",
-      maintenanceHistory: "Replaced valve on 2025-03-15",
-      criticalIssues: "No significant issues detected.",
-      recommendedAction: "Review inspection documentation and verify calibrations.",
-      additionalNotes: "Routine maintenance appears effective.",
-    },
-    {
-      id: 3,
-      task: "Inspect Pipeline C",
-      description:
-        "Scheduled inspection pending for Pipeline C. Confirm time slots with operations team and check pump station efficiency.",
-      assignedTo: "Inspector Alex",
-      status: "Assigned",
-      pipelineSection: "Section 11-15",
-      location: "South Field",
-      lastInspection: "2025-03-20",
-      nextInspection: "2025-04-20",
-      maintenanceHistory: "No maintenance actions recorded",
-      criticalIssues: "Potential risk of blockage if debris accumulates.",
-      recommendedAction: "Clean pipeline and inspect pump station performance.",
-      additionalNotes: "Ensure safety protocols are followed during cleaning.",
-    },
-  ];
+  // Form state
+  const [date, setDate] = useState("");
+  const [findings, setFindings] = useState("");
 
-  // Click handler: When a row is clicked, set the selected task.
-  const handleRowClick = (task: Task) => {
-    setSelectedTask(task);
-  };
+  useEffect(() => {
+    // Dummy data
+    const dummy: Inspection[] = [
+      {
+        InspectionID: 1,
+        PipelineID: 101,
+        InspectorID: 201,
+        SegmentID: 11,
+        InspectionDate: null,
+        Findings: null,
+        instructions:
+          "Inspect all joints and valves in Segment 11 for corrosion and leaks.",
+      },
+      {
+        InspectionID: 2,
+        PipelineID: 102,
+        InspectorID: 201,
+        SegmentID: 22,
+        InspectionDate: null,
+        Findings: null,
+        instructions:
+          "Check pressure gauges and structural integrity in Segment 22.",
+      },
+    ];
+    setInspections(dummy.filter((i) => i.InspectorID === inspectorID));
+  }, [inspectorID]);
 
-  // Handler to return to the tasks list.
-  const handleBack = () => {
-    setSelectedTask(null);
+  // Save partial or final updates
+  async function saveField(updated: {
+    inspectionDate?: string;
+    findings?: string;
+  }) {
+    if (!selected) return;
+    const payload = {
+      inspectionID: selected.InspectionID,
+      inspectionDate: updated.inspectionDate ?? date,
+      findings: updated.findings ?? findings,
+    };
+    await fetch(
+      "http://localhost/pipeline-monitoring/api/updateInspection.php",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+    // Update local state
+    setInspections((prev) =>
+      prev.map((i) =>
+        i.InspectionID === selected.InspectionID
+          ? {
+              ...i,
+              InspectionDate: payload.inspectionDate || null,
+              Findings: payload.findings || null,
+            }
+          : i
+      )
+    );
+    setSelected((prev) =>
+      prev
+        ? {
+            ...prev,
+            InspectionDate: payload.inspectionDate || null,
+            Findings: payload.findings || null,
+          }
+        : null
+    );
+  }
+
+  const onDateBlur = () => saveField({ inspectionDate: date });
+  const onFindingsBlur = () => saveField({ findings });
+
+  const statusOf = (i: Inspection) => {
+    if (i.Findings) return "Completed";
+    if (i.InspectionDate) return "Draft";
+    return "Pending";
   };
 
   return (
@@ -109,117 +126,135 @@ export default function InspectorDashboard() {
       <AppSidebar role="inspector" />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-4 px-4 lg:px-6">
-            {selectedTask ? (
-              // Detailed Task View
-              <Card className="p-6 text-sm">
-                <CardHeader className="mb-4">
-                  <CardTitle className="text-lg font-semibold">
-                    {selectedTask.task}
-                  </CardTitle>
+        <div className="flex flex-1 flex-col p-8 bg-black text-white space-y-6">
+          {/* Dynamic title */}
+          <h1 className="text-2xl font-semibold">
+            {selected
+              ? `Inspection #${selected.InspectionID}`
+              : "Inspector Dashboard"}
+          </h1>
+
+          {!selected ? (
+            <section className="space-y-4">
+              <h2 className="text-xl font-medium">Your Assigned Inspections</h2>
+              <Table className="bg-black text-white">
+                <TableCaption>Click to resume or start</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Pipeline</TableHead>
+                    <TableHead>Segment</TableHead>
+                    <TableHead>Inspector</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inspections.map((insp) => (
+                    <TableRow
+                      key={insp.InspectionID}
+                      className="bg-black cursor-pointer"
+                      onClick={() => {
+                        setSelected(insp);
+                        setDate(insp.InspectionDate || "");
+                        setFindings(insp.Findings || "");
+                      }}
+                    >
+                      <TableCell>{insp.InspectionID}</TableCell>
+                      <TableCell>{insp.PipelineID}</TableCell>
+                      <TableCell>{insp.SegmentID}</TableCell>
+                      <TableCell>{insp.InspectorID}</TableCell>
+                      <TableCell>{statusOf(insp)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {!inspections.length && (
+                    <TableRow className="bg-black">
+                      <TableCell colSpan={5} className="text-center">
+                        No assignments.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </section>
+          ) : (
+            <section className="space-y-6">
+              {/* Instructions */}
+              <Card className="p-4 bg-black border border-gray-700">
+                <CardContent>
+                  <p className="text-sm">
+                    <strong>Instructions:</strong> {selected.instructions}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Fixed details */}
+              <Card className="p-4 bg-black border border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-lg font-medium">Details</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <strong>Description:</strong>
-                    <p className="ml-2">{selectedTask.description}</p>
+                <CardContent className="grid md:grid-cols-2 gap-4">
+                  {([
+                    ["Inspection ID", selected.InspectionID],
+                    ["Pipeline ID", selected.PipelineID],
+                    ["Segment ID", selected.SegmentID],
+                    ["Inspector ID", selected.InspectorID],
+                  ] as [string, number][]).map(([lbl, val]) => (
+                    <div key={lbl} className="grid gap-1">
+                      <label className="text-xs">{lbl}</label>
+                      <Input
+                        value={String(val)}
+                        disabled
+                        className="bg-black text-white border-gray-600"
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Findings form */}
+              <Card className="p-4 bg-black border border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-lg font-medium">Your Findings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-1">
+                    <label className="text-xs">Inspection Date</label>
+                    <Input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      onBlur={onDateBlur}
+                      className="bg-black text-white border-gray-600"
+                    />
                   </div>
-                  <div>
-                    <strong>Assigned To:</strong>
-                    <p className="ml-2">{selectedTask.assignedTo}</p>
-                  </div>
-                  <div>
-                    <strong>Status:</strong>
-                    <p className="ml-2">{selectedTask.status}</p>
-                  </div>
-                  <div>
-                    <strong>Pipeline Section:</strong>
-                    <p className="ml-2">{selectedTask.pipelineSection}</p>
-                  </div>
-                  <div>
-                    <strong>Location:</strong>
-                    <p className="ml-2">{selectedTask.location}</p>
-                  </div>
-                  <div>
-                    <strong>Last Inspection:</strong>
-                    <p className="ml-2">{selectedTask.lastInspection}</p>
-                  </div>
-                  <div>
-                    <strong>Next Inspection:</strong>
-                    <p className="ml-2">{selectedTask.nextInspection}</p>
-                  </div>
-                  <div>
-                    <strong>Maintenance History:</strong>
-                    <p className="ml-2">{selectedTask.maintenanceHistory}</p>
-                  </div>
-                  <div>
-                    <strong>Critical Issues:</strong>
-                    <p className="ml-2">{selectedTask.criticalIssues}</p>
-                  </div>
-                  <div>
-                    <strong>Recommended Action:</strong>
-                    <p className="ml-2">{selectedTask.recommendedAction}</p>
-                  </div>
-                  <div>
-                    <strong>Additional Notes:</strong>
-                    <p className="ml-2">{selectedTask.additionalNotes}</p>
+                  <div className="grid gap-1">
+                    <label className="text-xs">Findings</label>
+                    <Textarea
+                      rows={4}
+                      value={findings}
+                      onChange={(e) => setFindings(e.target.value)}
+                      onBlur={onFindingsBlur}
+                      className="bg-black text-white border-gray-600 placeholder-gray-500"
+                      placeholder="Describe your findings…"
+                    />
                   </div>
                 </CardContent>
-                <CardFooter className="mt-4">
-                  <Button onClick={handleBack} size="sm">
-                    Back to Tasks
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => setSelected(null)}>
+                    Back
                   </Button>
+                  {/* Only show Submit when both fields are non-empty */}
+                  {date && findings ? (
+                    <Button onClick={() => saveField({ inspectionDate: date, findings })}>
+                      Submit
+                    </Button>
+                  ) : (
+                    <span className="text-sm text-gray-500">Incomplete</span>
+                  )}
                 </CardFooter>
               </Card>
-            ) : (
-              <>
-                <div className="flex flex-col gap-3 py-4">
-                  <h1 className="text-lg font-semibold">Inspector Dashboard</h1>
-                </div>
-                {/* Tasks Table Section */}
-                <section>
-                  <h2 className="text-lg font-semibold mb-3">
-                    Assigned Inspections
-                  </h2>
-                  <Table>
-                    <TableCaption className="text-sm">
-                      A list of your assigned inspections.
-                    </TableCaption>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[150px] text-sm">Task</TableHead>
-                        <TableHead className="text-sm">Description</TableHead>
-                        <TableHead className="text-sm">Assigned To</TableHead>
-                        <TableHead className="text-sm">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tasks.map((item) => (
-                        <TableRow
-                          key={item.id}
-                          onClick={() => handleRowClick(item)}
-                          className="cursor-pointer hover:bg-muted transition-colors"
-                        >
-                          <TableCell className="font-medium text-sm">
-                            {item.task}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {item.description}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {item.assignedTo}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {item.status}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </section>
-              </>
-            )}
-          </div>
+            </section>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>
