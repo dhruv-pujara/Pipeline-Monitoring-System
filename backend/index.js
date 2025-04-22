@@ -19,17 +19,102 @@ app.get("/", (req, res) => {
   res.json("Hello! This is the backend.")
 })
 
-// Register User (Signup)
-app.post("/register", (req, res) => {
-  const { name, username, email, phone, password, role } = req.body
-  const q = "INSERT INTO Login (`name`, `username`, `email`, `phone`, `password_hash`, `role`) VALUES (?)"
-  const values = [name, username, email, phone, password, role]
+// // Register User (Signup)
+// app.post("/register", (req, res) => {
+//   const { name, username, email, phone, password, role } = req.body
+//   const q = "INSERT INTO Login (`name`, `username`, `email`, `phone`, `password_hash`, `role`) VALUES (?)"
+//   const values = [name, username, email, phone, password, role]
 
-  db.query(q, [values], (err, data) => {
-    if (err) return res.status(500).json(err)
-    return res.status(201).json({ message: "User registered successfully" })
-  })
-})
+//   db.query(q, [values], (err, data) => {
+//     if (err) return res.status(500).json(err)
+//     return res.status(201).json({ message: "User registered successfully" })
+//   })
+// })
+
+// app.post("/register", (req, res) => {
+//   const { name, username, email, phone, password, role } = req.body;
+
+//   const insertLogin = `
+//     INSERT INTO Login (name, username, email, phone, password_hash, role)
+//     VALUES (?, ?, ?, ?, ?, ?)
+//   `;
+
+//   const loginValues = [name, username, email, phone, password, role];
+
+//   db.query(insertLogin, loginValues, (err, result) => {
+//     if (err) {
+//       console.error("Error inserting into Login:", err);
+//       return res.status(500).json({ error: "Failed to register user" });
+//     }
+
+//     const userId = result.insertId;
+
+//     if (role === "Inspector") {
+//       const insertInspector = `
+//         INSERT INTO Inspector (InspectorID, Name, Phone, Email)
+//         VALUES (?, ?, ?, ?)
+//       `;
+//       const inspectorValues = [userId, name, phone, email];
+
+//       db.query(insertInspector, inspectorValues, (inspectorErr) => {
+//         if (inspectorErr) {
+//           console.error("Error inserting into Inspector:", inspectorErr);
+//           return res.status(500).json({ error: "Failed to create inspector profile" });
+//         }
+
+//         return res.status(201).json({ message: "Inspector registered successfully" });
+//       });
+//     } else {
+//       return res.status(201).json({ message: "User registered successfully" });
+      
+//     }
+//   });
+// });
+
+app.post("/register", (req, res) => {
+  const { name, username, email, phone, password, role } = req.body;
+
+  const insertLogin = `
+    INSERT INTO Login (name, username, email, phone, password_hash, role)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  const loginValues = [name, username, email, phone, password, role];
+
+  db.query(insertLogin, loginValues, (err, result) => {
+    if (err) {
+      console.error("Error inserting into Login:", err);
+      return res.status(500).json({ error: "Failed to register user" });
+    }
+
+    const userId = result.insertId;
+  
+    if (role && role.toLowerCase() === "inspector") {
+      const insertInspector = `
+        INSERT INTO Inspector (InspectorID, Name, Phone, Email)
+        VALUES (?, ?, ?, ?)
+      `;
+      const inspectorValues = [userId, name, phone, email];
+
+      console.log("🛠 Running Inspector INSERT with:", inspectorValues);
+
+      db.query(insertInspector, inspectorValues, (inspectorErr) => {
+        if (inspectorErr) {
+        
+          return res.status(500).json({ error: "Failed to create inspector profile" });
+        }
+        return res.status(201).json({ message: "Inspector registered successfully" });
+      });
+    } else {
+      return res.status(201).json({ message: "User registered successfully" });
+    }
+  });
+});
+
+
+
+
+
+
 
 app.get("/inspections", authenticateToken, (req, res) => {
   const q = "SELECT * FROM INSPECTION"
