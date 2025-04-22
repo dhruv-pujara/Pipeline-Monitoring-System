@@ -41,24 +41,55 @@ app.get("/inspections", authenticateToken, (req, res) => {
 })
 
 // Login API
+// app.post("/login", (req, res) => {
+//   const { username, password } = req.body
+//   const q = "SELECT * FROM Login WHERE username = ?"
+
+//   db.query(q, [username], (err, results) => {
+//     if (err) return res.status(500).json(err)
+//     if (results.length === 0) return res.status(401).json({ error: "User not found" })
+
+//     const user = results[0]
+
+//     if (user.password_hash !== password) {
+//       return res.status(401).json({ error: "Invalid password" })
+//     }
+
+//     const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
+//     return res.status(200).json({ message: "Login successful", token, role: user.role })
+//   })
+// })
+
 app.post("/login", (req, res) => {
-  const { username, password } = req.body
-  const q = "SELECT * FROM Login WHERE username = ?"
+  const { username, password } = req.body;
+  const q = "SELECT * FROM Login WHERE username = ?";
 
   db.query(q, [username], (err, results) => {
-    if (err) return res.status(500).json(err)
-    if (results.length === 0) return res.status(401).json({ error: "User not found" })
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0) return res.status(401).json({ error: "User not found" });
 
-    const user = results[0]
+    const user = results[0];
 
     if (user.password_hash !== password) {
-      return res.status(401).json({ error: "Invalid password" })
+      return res.status(401).json({ error: "Invalid password" });
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
-    return res.status(200).json({ message: "Login successful", token, role: user.role })
-  })
-})
+    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      role: user.role,
+      id: user.id,
+      name: user.name,
+      email: user.email
+    });
+  });
+});
+
+
 
 // To get all users in the database
 app.get("/users", (req, res) => {
@@ -123,6 +154,58 @@ app.post("/delete", (req, res) => {
     return res.status(200).json({ message: "User deleted successfully." });
   });
 });
+
+app.get("/inspectors", (req, res) => {
+  const q = "SELECT InspectorID, Name, Phone, Email FROM INSPECTOR";
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("Error fetching inspectors:", err);
+      return res.status(500).json({ error: "Failed to fetch inspectors" });
+    }
+    res.json(results);
+  });
+});
+
+// 🔍 Get all pipelines
+app.get("/pipelines", (req, res) => {
+  const q = "SELECT * FROM Pipeline";
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("Error fetching pipelines:", err);
+      return res.status(500).json({ error: "Failed to fetch pipelines" });
+    }
+    res.json(results);
+  });
+});
+
+// 🔍 Get all segments
+app.get("/segments", (req, res) => {
+  const q = "SELECT * FROM Segment";
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("Error fetching segments:", err);
+      return res.status(500).json({ error: "Failed to fetch segments" });
+    }
+    res.json(results);
+  });
+});
+
+// Assign an inspection
+app.post("/assign-inspection", (req, res) => {
+  const { inspectorId, pipelineId, segmentId } = req.body;
+  const q = `
+    INSERT INTO Inspection (PipelineID, InspectorID, SegmentID)
+    VALUES (?, ?, ?)
+  `;
+  db.query(q, [pipelineId, inspectorId, segmentId], (err, result) => {
+    if (err) {
+      console.error("Error assigning inspection:", err);
+      return res.status(500).json({ message: "Failed to assign inspection" });
+    }
+    res.json({ message: "Inspection successfully assigned" });
+  });
+});
+
 
 // Protected Dashboard Route (requires token)
 app.get("/dashboard", authenticateToken, (req, res) => {
