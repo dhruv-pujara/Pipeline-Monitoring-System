@@ -2,6 +2,9 @@
 
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/hooks/use-toast"
+
 import {
   Select,
   SelectContent,
@@ -219,44 +222,442 @@ type User = {
   password: string;
 };
 
-function UpdateUserForm() {
+// function UpdateUserForm() {
+//   const [form, setForm] = useState({
+//     id:'',
+//     name: '',
+//     username: '',
+//     email: '',
+//     phone: '',
+//     password: '',
+//     role: '',
+//   });
+
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [users, setUsers] = useState<User[]>([]); // Explicitly set the type here as User[]
+//   useEffect(() => {
+//     async function loadUsers() {
+//       try {
+//         const res = await fetch("http://localhost:8800/users")
+  
+//         // 1) Parse the JSON into a temporary `any`
+//         const json: any = await res.json()
+  
+//         // 2) If the response wasn’t OK, handle the error shape
+//         if (!res.ok) {
+//           // assume your server returns { error: string }
+//           throw new Error(json.error || "Failed to fetch users")
+//         }
+  
+//         // 3) Now you know it’s really an array of User
+//         const users: User[] = json
+//         setUsers(users)
+  
+//       } catch (err) {
+//         console.error("Error loading users:", err)
+//       }
+//     }
+//     loadUsers()
+//   }, [])
+  
+
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+//     const { name, value } = e.target;
+//     setForm((prevState) => ({
+//       ...prevState,
+//       [name]: value,
+//     }));
+//   };
+
+//   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     setSearchTerm(e.target.value);
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     try {
+//       const res = await fetch('http://localhost:8800/update', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(form),
+//       });
+  
+//       const data = await res.json();
+  
+//       if (res.ok) {
+//         alert(data.message);
+//       } else {
+//         alert(data.message || 'Update failed');
+//       }
+//     } catch (error) {
+//       alert('Network error');
+//       console.error("Network error:", error);
+//     }
+//   };
+  
+
+//   function setRole(val: string): void {
+//     throw new Error("Function not implemented.");
+//   }
+
+//   return (
+//     <>
+//       <h3 className="text-lg font-medium">Update User</h3>
+//       {/* … your update form markup … */}
+
+//       {/* Search Input */}
+//       <input
+//         placeholder="Search User"
+//         value={searchTerm}
+//         onChange={(e) => setSearchTerm(e.target.value)}
+//         className="w-full border px-3 py-2 rounded-md my-4"
+//       />
+
+//       {/* User Table */}
+//       <Table>
+//         <TableHeader>
+//           <TableRow>
+//             <TableHead>ID</TableHead>
+//             <TableHead>Full Name</TableHead>
+//             <TableHead>Username</TableHead>
+//             <TableHead>Email</TableHead>
+//             <TableHead>Phone</TableHead>
+//             <TableHead>Password</TableHead>
+//             <TableHead>Role</TableHead>
+//             <TableHead>Created_At</TableHead>
+//           </TableRow>
+//         </TableHeader>
+//         <TableBody>
+//   {users
+//   .filter(u =>
+//     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     String(u.id).toLowerCase().includes(searchTerm.toLowerCase())
+//   )
+  
+  
+//     .map(u => (
+//       <TableRow key={u.id}>
+//         <TableCell>{u.id}</TableCell>
+//         <TableCell>{u.name}</TableCell>
+//         <TableCell>{u.username}</TableCell>
+//         <TableCell>{u.email}</TableCell>
+//         <TableCell>{u.phone || '-'}</TableCell>
+//         <TableCell>{u.password || '-'}</TableCell>
+//         <TableCell>{u.role}</TableCell>
+//         <TableCell>{(u as any).created_at || '-'}</TableCell>
+//         <TableCell>
+//         <Button onClick={() => setForm({ ...u })}>
+//   Edit
+// </Button>
+//         </TableCell>
+//       </TableRow>
+//     ))
+//   }
+// </TableBody>
+//       </Table>
+
+//       <div>
+//         <Label htmlFor="id">ID</Label>
+//         <Input
+//           id="id"
+//           name="id"
+//           value={form.id}
+//           onChange={handleChange}
+//         />
+//       </div>
+      
+//       <div>
+//         <Label htmlFor="name">Full Name</Label>
+//         <Input
+//           id="name"
+//           name="name"
+//           value={form.name}
+//           onChange={handleChange}
+//         />
+//       </div>
+
+//       <div>
+//         <Label htmlFor="username">Username</Label>
+//         <Input
+//           id="username"
+//           name="username"
+//           value={form.username}
+//           onChange={handleChange}
+//         />
+//       </div>
+
+//       <div>
+//         <Label htmlFor="email">Email</Label>
+//         <Input
+//           id="email"
+//           name="email"
+//           type="email"
+//           value={form.email}
+//           onChange={handleChange}
+//         />
+//       </div>
+
+//       <div>
+//         <Label htmlFor="phone">Phone</Label>
+//         <Input
+//           id="phone"
+//           name="phone"
+//           type="tel"
+//           value={form.phone}
+//           onChange={handleChange}
+//         />
+//       </div>
+
+//       <div>
+//         <Label htmlFor="password">Password</Label>
+//         <Input
+//   id="password"
+//   name="password"
+//   type="text"  // 👈 makes it visible
+//   value={form.password}
+//   onChange={handleChange}
+// />
+//       </div>
+
+//       <div>
+
+//       <Label htmlFor="role">Role</Label>
+//       <Select
+//         value={form.role}
+//         onValueChange={(val) =>
+//           setForm((prev) => ({ ...prev, role: val }))
+//         }
+//       >
+//         <SelectTrigger id="role" name="role">
+//           <SelectValue placeholder="Select a role" />
+//         </SelectTrigger>
+//         <SelectContent>
+//           <SelectGroup>
+//             <SelectItem value="admin">Admin</SelectItem>
+//             <SelectItem value="owner">Owner</SelectItem>
+//             <SelectItem value="inspector">Inspector</SelectItem>
+//           </SelectGroup>
+//         </SelectContent>
+//       </Select>
+//       </div>
+//       <button className="bg-destructive text-white px-4 py-2 rounded-md">Update</button>
+
+//     </>
+//   )
+// }
+
+// function UpdateUserForm() {
+//   const [form, setForm] = useState({
+//     id: '',
+//     name: '',
+//     username: '',
+//     email: '',
+//     phone: '',
+//     password: '',
+//     role: '',
+//   });
+
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [users, setUsers] = useState<User[]>([]);
+
+//   useEffect(() => {
+//     async function loadUsers() {
+//       try {
+//         const res = await fetch("http://localhost:8800/users");
+//         const json: any = await res.json();
+
+//         if (!res.ok) throw new Error(json.error || "Failed to fetch users");
+
+//         const users: User[] = json;
+//         setUsers(users);
+//       } catch (err) {
+//         console.error("Error loading users:", err);
+//       }
+//     }
+//     loadUsers();
+//   }, []);
+
+//   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+//     const { name, value } = e.target;
+//     setForm((prevState) => ({
+//       ...prevState,
+//       [name]: value,
+//     }));
+//   };
+
+//   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     setSearchTerm(e.target.value);
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     try {
+//       const res = await fetch('http://localhost:8800/update', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(form),
+//       });
+
+//       const data = await res.json();
+
+//       if (res.ok) {
+//         alert(data.message);
+//       } else {
+//         alert(data.message || 'Update failed');
+//       }
+//     } catch (error) {
+//       alert('Network error');
+//       console.error("Network error:", error);
+//     }
+//   };
+
+//   return (
+//     <>
+//       <h3 className="text-lg font-medium">Update User</h3>
+
+//       {/* Search Input */}
+//       <input
+//         placeholder="Search User"
+//         value={searchTerm}
+//         onChange={handleSearchChange}
+//         className="w-full border px-3 py-2 rounded-md my-4"
+//       />
+
+//       {/* User Table */}
+//       <Table>
+//         <TableHeader>
+//           <TableRow>
+//             <TableHead>ID</TableHead>
+//             <TableHead>Full Name</TableHead>
+//             <TableHead>Username</TableHead>
+//             <TableHead>Email</TableHead>
+//             <TableHead>Phone</TableHead>
+//             <TableHead>Password</TableHead>
+//             <TableHead>Role</TableHead>
+//             <TableHead>Created_At</TableHead>
+//             <TableHead>Action</TableHead>
+//           </TableRow>
+//         </TableHeader>
+//         <TableBody>
+//           {users
+//             .filter(u =>
+//               u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//               u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//               u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//               String(u.id).toLowerCase().includes(searchTerm.toLowerCase())
+//             )
+//             .map(u => (
+//               <TableRow key={u.id}>
+//                 <TableCell>{u.id}</TableCell>
+//                 <TableCell>{u.name}</TableCell>
+//                 <TableCell>{u.username}</TableCell>
+//                 <TableCell>{u.email}</TableCell>
+//                 <TableCell>{u.phone || '-'}</TableCell>
+//                 <TableCell>{u.password || '-'}</TableCell>
+//                 <TableCell>{u.role}</TableCell>
+//                 <TableCell>{(u as any).created_at || '-'}</TableCell>
+//                 <TableCell>
+//                   <Button onClick={() => setForm({ ...u })}>
+//                     Edit
+//                   </Button>
+//                 </TableCell>
+//               </TableRow>
+//             ))}
+//         </TableBody>
+//       </Table>
+
+//       {/* Update Form */}
+//       <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+//         <div>
+//           <Label htmlFor="id">ID</Label>
+//           <Input id="id" name="id" value={form.id} onChange={handleChange} />
+//         </div>
+
+//         <div>
+//           <Label htmlFor="name">Full Name</Label>
+//           <Input id="name" name="name" value={form.name} onChange={handleChange} />
+//         </div>
+
+//         <div>
+//           <Label htmlFor="username">Username</Label>
+//           <Input id="username" name="username" value={form.username} onChange={handleChange} />
+//         </div>
+
+//         <div>
+//           <Label htmlFor="email">Email</Label>
+//           <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} />
+//         </div>
+
+//         <div>
+//           <Label htmlFor="phone">Phone</Label>
+//           <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} />
+//         </div>
+
+//         <div>
+//           <Label htmlFor="password">Password</Label>
+//           <Input id="password" name="password" type="text" value={form.password} onChange={handleChange} />
+//         </div>
+
+//         <div>
+//           <Label htmlFor="role">Role</Label>
+//           <Select
+//             value={form.role}
+//             onValueChange={(val) =>
+//               setForm((prev) => ({ ...prev, role: val }))
+//             }
+//           >
+//             <SelectTrigger id="role" name="role">
+//               <SelectValue placeholder="Select a role" />
+//             </SelectTrigger>
+//             <SelectContent>
+//               <SelectGroup>
+//                 <SelectItem value="admin">Admin</SelectItem>
+//                 <SelectItem value="owner">Owner</SelectItem>
+//                 <SelectItem value="inspector">Inspector</SelectItem>
+//               </SelectGroup>
+//             </SelectContent>
+//           </Select>
+//         </div>
+
+//         <button type="submit" className="bg-destructive text-white px-4 py-2 rounded-md">
+//           Update
+//         </button>
+//       </form>
+//     </>
+//   );
+// }
+
+export function UpdateUserForm() {
+  const { toast } = useToast();
+
   const [form, setForm] = useState({
-    id:'',
+    id: '',
     name: '',
     username: '',
     email: '',
     phone: '',
-    password: '••••••••',
+    password: '',
     role: '',
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [users, setUsers] = useState<User[]>([]); // Explicitly set the type here as User[]
+  const [users, setUsers] = useState<User[]>([]);
+
   useEffect(() => {
     async function loadUsers() {
       try {
-        const res = await fetch("http://localhost:8800/users")
-  
-        // 1) Parse the JSON into a temporary `any`
-        const json: any = await res.json()
-  
-        // 2) If the response wasn’t OK, handle the error shape
-        if (!res.ok) {
-          // assume your server returns { error: string }
-          throw new Error(json.error || "Failed to fetch users")
-        }
-  
-        // 3) Now you know it’s really an array of User
-        const users: User[] = json
-        setUsers(users)
-  
+        const res = await fetch("http://localhost:8800/users");
+        const json: User[] = await res.json();
+        if (!res.ok) throw new Error("Failed to fetch users");
+        setUsers(json);
       } catch (err) {
-        console.error("Error loading users:", err)
+        console.error("Error loading users:", err);
       }
     }
-    loadUsers()
-  }, [])
-  
+    loadUsers();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -270,44 +671,52 @@ function UpdateUserForm() {
     setSearchTerm(e.target.value);
   };
 
+  const resetForm = () => {
+    setForm({
+      id: '',
+      name: '',
+      username: '',
+      email: '',
+      phone: '',
+      password: '',
+      role: '',
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:8800/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://localhost:8800/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+
       const data = await res.json();
+
       if (res.ok) {
-        alert('User updated successfully');
+        toast({ title: "Success", description: data.message });
+        resetForm();
       } else {
-        alert('Error: ' + (data.message || 'Something went wrong'));
+        toast({ variant: "destructive", title: "Error", description: data.message || "Update failed" });
       }
     } catch (error) {
-      alert('Network error');
-      console.error(error);
+      console.error("Network error:", error);
+      toast({ variant: "destructive", title: "Network error", description: "Please try again later." });
     }
   };
-
-  function setRole(val: string): void {
-    throw new Error("Function not implemented.");
-  }
 
   return (
     <>
       <h3 className="text-lg font-medium">Update User</h3>
-      {/* … your update form markup … */}
 
-      {/* Search Input */}
       <input
         placeholder="Search User"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        onChange={handleSearchChange}
         className="w-full border px-3 py-2 rounded-md my-4"
       />
 
-      {/* User Table */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -319,132 +728,70 @@ function UpdateUserForm() {
             <TableHead>Password</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Created_At</TableHead>
+            <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-  {users
-  .filter(u =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    String(u.id).toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  
-  
-    .map(u => (
-      <TableRow key={u.id}>
-        <TableCell>{u.id}</TableCell>
-        <TableCell>{u.name}</TableCell>
-        <TableCell>{u.username}</TableCell>
-        <TableCell>{u.email}</TableCell>
-        <TableCell>{u.phone || '-'}</TableCell>
-        <TableCell>••••••••</TableCell>
-        <TableCell>{u.role}</TableCell>
-        <TableCell>{(u as any).created_at || '-'}</TableCell>
-        <TableCell>
-        <Button onClick={() => setForm({ ...u, password: '' })}>
-  Edit
-</Button>
-        </TableCell>
-      </TableRow>
-    ))
-  }
-</TableBody>
+          {users
+            .filter(u =>
+              u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(u.id).includes(searchTerm)
+            )
+            .map((u) => (
+              <TableRow key={u.id}>
+                <TableCell>{u.id}</TableCell>
+                <TableCell>{u.name}</TableCell>
+                <TableCell>{u.username}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.phone || "-"}</TableCell>
+                <TableCell>{u.password || "-"}</TableCell>
+                <TableCell>{u.role}</TableCell>
+                <TableCell>{(u as any).created_at || "-"}</TableCell>
+                <TableCell>
+                  <Button onClick={() => setForm({ ...u })}>Edit</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
       </Table>
 
-      <div>
-        <Label htmlFor="id">ID</Label>
-        <Input
-          id="id"
-          name="id"
-          value={form.id}
-          onChange={handleChange}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="name">Full Name</Label>
-        <Input
-          id="name"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+        <Input id="id" name="id" value={form.id} onChange={handleChange} placeholder="ID" />
+        <Input id="name" name="name" value={form.name} onChange={handleChange} placeholder="Full Name" />
+        <Input id="username" name="username" value={form.username} onChange={handleChange} placeholder="Username" />
+        <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" />
+        <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="Phone" />
+        <Input id="password" name="password" type="text" value={form.password} onChange={handleChange} placeholder="Password" />
 
-      <div>
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          name="username"
-          value={form.username}
-          onChange={handleChange}
-        />
-      </div>
+        <Select value={form.role} onValueChange={(val) => setForm((prev) => ({ ...prev, role: val }))}>
+          <SelectTrigger id="role" name="role">
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="owner">Owner</SelectItem>
+              <SelectItem value="inspector">Inspector</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="phone">Phone</Label>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          value={form.phone}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          value={form.password}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div>
-
-      <Label htmlFor="role">Role</Label>
-<Select
-  value={form.role}
-  onValueChange={(val) =>
-    setForm((prev) => ({ ...prev, role: val }))
-  }
->
-  <SelectTrigger id="role" name="role">
-    <SelectValue placeholder="Select a role" />
-  </SelectTrigger>
-  <SelectContent>
-    <SelectGroup>
-      <SelectItem value="admin">Admin</SelectItem>
-      <SelectItem value="owner">Owner</SelectItem>
-      <SelectItem value="inspector">Inspector</SelectItem>
-    </SelectGroup>
-  </SelectContent>
-</Select>
-
-     
-      </div>
-
-
-      <button className="bg-destructive text-white px-4 py-2 rounded-md">Update</button>
-
+        <Button
+          type="submit"
+          className="bg-destructive text-white px-4 py-2 rounded-md"
+          disabled={!form.id}
+        >
+          Update
+        </Button>
+      </form>
     </>
-  )
+  );
 }
+
+
+
 
 function DeleteUserForm() {
   const [users, setUsers] = useState<User[]>([])
