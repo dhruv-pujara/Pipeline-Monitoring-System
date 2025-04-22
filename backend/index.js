@@ -115,6 +115,58 @@ app.post("/delete", (req, res) => {
   });
 });
 
+// 🔍 Get all inspectors
+app.get("/inspectors", (req, res) => {
+  const q = "SELECT id AS InspectorID, name FROM Login WHERE role = 'Inspector'";
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("Error fetching inspectors:", err);
+      return res.status(500).json({ error: "Failed to fetch inspectors" });
+    }
+    res.json(results);
+  });
+});
+
+// 🔍 Get all pipelines
+app.get("/pipelines", (req, res) => {
+  const q = "SELECT * FROM Pipeline";
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("Error fetching pipelines:", err);
+      return res.status(500).json({ error: "Failed to fetch pipelines" });
+    }
+    res.json(results);
+  });
+});
+
+// 🔍 Get all segments
+app.get("/segments", (req, res) => {
+  const q = "SELECT * FROM Segment";
+  db.query(q, (err, results) => {
+    if (err) {
+      console.error("Error fetching segments:", err);
+      return res.status(500).json({ error: "Failed to fetch segments" });
+    }
+    res.json(results);
+  });
+});
+
+// ✅ Assign an inspection
+app.post("/assign-inspection", (req, res) => {
+  const { inspectorId, pipelineId, segmentId, inspectionDate } = req.body;
+  const q = `
+    INSERT INTO Inspection (PipelineID, InspectorID, SegmentID, InspectionDate)
+    VALUES (?, ?, ?, ?)
+  `;
+  db.query(q, [pipelineId, inspectorId, segmentId, inspectionDate], (err, result) => {
+    if (err) {
+      console.error("Error assigning inspection:", err);
+      return res.status(500).json({ message: "Failed to assign inspection" });
+    }
+    res.json({ message: "Inspection successfully assigned" });
+  });
+});
+
 
 // Protected Dashboard Route (requires token)
 app.get("/dashboard", authenticateToken, (req, res) => {

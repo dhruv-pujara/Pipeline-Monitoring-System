@@ -1,31 +1,6 @@
-// import { AppSidebar } from "@/components/ui/app-sidebar"
-// import { ChartAreaInteractive } from "@/components/ui/chart-area-interactive"
-// import { DataTable } from "@/components/ui/data-table"
-// import { SectionCards } from "@/components/ui/section-cards"
-// import { SiteHeader } from "@/components/ui/site-header"
-// import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
-// export default function Page() {
-//   return (
-//     <SidebarProvider>
-//       <AppSidebar role="admin" />
-//       <SidebarInset>
-//         <SiteHeader />
-//         <div className="flex flex-1 flex-col">
-//           <div className="@container/main flex flex-1 flex-col gap-2">
-//             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-//               <div className="px-4 lg:px-6">
-//                 <h1 className="text-2xl font-bold">Inspections</h1>
-//               </div>
+"use client";
 
-//             </div>
-//           </div>
-//         </div>
-//       </SidebarInset>
-//     </SidebarProvider>
-//   )
-// }
-'use client'
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
@@ -33,14 +8,27 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+
+type Inspector = { id: number; name: string; phone?: string; email?: string };
+type Pipeline = { PipelineID: number; Location: string };
+type Segment = { SegmentID: number; PipelineID: number; PressureLevel: number; FlowRate: number; LastModifiedDate: string };
+type Assigned = { AssignedInspections: string; InspectorID: number };
+type TableType = "inspector" | "pipeline" | "segment";
 
 export default function Page() {
-  const [inspectors, setInspectors] = useState([]);
-  const [pipelines, setPipelines] = useState([]);
-  const [segments, setSegments] = useState([]);
-  const [assigned, setAssigned] = useState([]);
+  const [inspectors, setInspectors] = useState<Inspector[]>([]);
+  const [pipelines, setPipelines] = useState<Pipeline[]>([]);
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [assigned, setAssigned] = useState<Assigned[]>([]);
+  const [activeTable, setActiveTable] = useState<TableType | null>(null);
 
   const [form, setForm] = useState({
     inspectorId: "",
@@ -56,11 +44,11 @@ export default function Page() {
     fetch("http://localhost:8800/assigned").then(res => res.json()).then(setAssigned);
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleAssign = async (e) => {
+  const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await fetch("http://localhost:8800/assign-inspection", {
       method: "POST",
@@ -75,6 +63,60 @@ export default function Page() {
     }
   };
 
+  const handleRowClick = (type: TableType, item: any) => {
+    const idKey = type === "inspector" ? "InspectorID" : `${type.charAt(0).toUpperCase() + type.slice(1)}ID`;
+    const selectedId = item[idKey];
+  
+    if (selectedId !== undefined) {
+      setForm(prev => ({
+        ...prev,
+        [`${type}Id`]: selectedId.toString()
+      }));
+    } else {
+      console.warn("ID not found in row:", item);
+    }
+  };
+  
+
+  const renderTable = (type: TableType) => {
+    let data: any[] = [];
+    if (type === "inspector") data = inspectors.map(i => ({
+      InspectorID: i.id, 
+      Name: i.name,
+      Phone: i.phone,
+      Email: i.email
+    }));
+    if (type === "pipeline") data = pipelines;
+    if (type === "segment") data = segments;
+
+    return (
+      <Table className="mt-4">
+        <TableHeader>
+          <TableRow>
+            {Object.keys(data[0] || {}).map(key => (
+              <TableHead key={key}>{key}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((item, index) => (
+            <TableRow
+              key={index}
+              onClick={() => handleRowClick(type, item)}
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              {Object.values(item).map((val, i) => (
+                <TableCell key={i}>
+                  {typeof val === "string" || typeof val === "number" ? val : JSON.stringify(val)}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar role="admin" />
@@ -83,82 +125,29 @@ export default function Page() {
         <div className="flex flex-1 flex-col p-4">
           <h1 className="text-2xl font-bold mb-6">Inspection Assignment Dashboard</h1>
 
-          <form onSubmit={handleAssign} className="space-y-4">
+          <form onSubmit={handleAssign} className="space-y-4 max-w-xl">
             <div>
-              <Label>Inspector</Label>
-              <Select onValueChange={(val) => setForm(prev => ({ ...prev, inspectorId: val }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Inspector" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {inspectors.map(i => (
-                      <SelectItem key={i.id} value={i.id.toString()}>{i.name}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Label>Inspector ID</Label>
+              <Input name="inspectorId" value={form.inspectorId} onChange={handleChange} />
             </div>
-
             <div>
-              <Label>Pipeline</Label>
-              <Select onValueChange={(val) => setForm(prev => ({ ...prev, pipelineId: val }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Pipeline" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {pipelines.map(p => (
-                      <SelectItem key={p.PipelineID} value={p.PipelineID.toString()}>{p.Location}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Label>Pipeline ID</Label>
+              <Input name="pipelineId" value={form.pipelineId} onChange={handleChange} />
             </div>
-
             <div>
-              <Label>Segment</Label>
-              <Select onValueChange={(val) => setForm(prev => ({ ...prev, segmentId: val }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Segment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {segments.map(s => (
-                      <SelectItem key={s.SegmentID} value={s.SegmentID.toString()}>{s.SegmentID}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Label>Segment ID</Label>
+              <Input name="segmentId" value={form.segmentId} onChange={handleChange} />
             </div>
-
-            <div>
-              <Label>Inspection Date</Label>
-              <Input name="inspectionDate" type="date" value={form.inspectionDate} onChange={handleChange} />
-            </div>
-
             <Button type="submit">Assign Inspection</Button>
           </form>
 
-          <div className="mt-10">
-            <h2 className="text-xl font-semibold mb-2">Assigned Inspections</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Assigned ID</TableHead>
-                  <TableHead>Inspector ID</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {assigned.map(a => (
-                  <TableRow key={`${a.AssignedInspections}-${a.InspectorID}`}>
-                    <TableCell>{a.AssignedInspections}</TableCell>
-                    <TableCell>{a.InspectorID}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="flex space-x-4 mt-10">
+            <Button variant="outline" onClick={() => setActiveTable("inspector")}>Show Inspectors</Button>
+            <Button variant="outline" onClick={() => setActiveTable("pipeline")}>Show Pipelines</Button>
+            <Button variant="outline" onClick={() => setActiveTable("segment")}>Show Segments</Button>
           </div>
+
+          {activeTable && renderTable(activeTable)}
         </div>
       </SidebarInset>
     </SidebarProvider>
