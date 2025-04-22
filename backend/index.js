@@ -132,6 +132,7 @@ function authenticateToken(req, res, next) {
   })
 }
 
+
 // Start server
 app.listen(8800, () => {
   console.log("Backend server is running on port 8800!!")
