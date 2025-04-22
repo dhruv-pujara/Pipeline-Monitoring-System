@@ -124,10 +124,6 @@ app.post("/delete", (req, res) => {
   });
 });
 
-
-
-
-
 // Protected Dashboard Route (requires token)
 app.get("/dashboard", authenticateToken, (req, res) => {
   res.json({ message: "Welcome to the Dashboard", user: req.user })

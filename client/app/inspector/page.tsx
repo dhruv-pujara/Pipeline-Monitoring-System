@@ -35,81 +35,54 @@ interface Inspection {
 }
 
 export default function InspectorDashboard() {
+  // Replace with actual auth/context in production
   const inspectorID = 201;
+
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [selected, setSelected] = useState<Inspection | null>(null);
-
-  // Form state
   const [date, setDate] = useState("");
   const [findings, setFindings] = useState("");
 
+  // Fetch assigned inspections from backend
   useEffect(() => {
-    // Dummy data
-    const dummy: Inspection[] = [
-      {
-        InspectionID: 1,
-        PipelineID: 101,
-        InspectorID: 201,
-        SegmentID: 11,
-        InspectionDate: null,
-        Findings: null,
-        instructions:
-          "Inspect all joints and valves in Segment 11 for corrosion and leaks.",
-      },
-      {
-        InspectionID: 2,
-        PipelineID: 102,
-        InspectorID: 201,
-        SegmentID: 22,
-        InspectionDate: null,
-        Findings: null,
-        instructions:
-          "Check pressure gauges and structural integrity in Segment 22.",
-      },
-    ];
-    setInspections(dummy.filter((i) => i.InspectorID === inspectorID));
+    fetch(`http://localhost:8800/inspections?inspectorID=${inspectorID}`)
+      .then((res) => res.json())
+      .then((data: Inspection[]) => setInspections(data))
+      .catch((err) => console.error("Error fetching inspections:", err));
   }, [inspectorID]);
 
-  // Save partial or final updates
-  async function saveField(updated: {
-    inspectionDate?: string;
-    findings?: string;
-  }) {
+  // Update inspection Date and Findings in backend
+  async function saveField(updated: { inspectionDate?: string; findings?: string }) {
     if (!selected) return;
     const payload = {
       inspectionID: selected.InspectionID,
       inspectionDate: updated.inspectionDate ?? date,
       findings: updated.findings ?? findings,
     };
-    await fetch(
-      "http://localhost/pipeline-monitoring/api/updateInspection.php",
-      {
+    try {
+      const res = await fetch("http://localhost:8800/updateInspection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }
-    );
-    // Update local state
-    setInspections((prev) =>
-      prev.map((i) =>
-        i.InspectionID === selected.InspectionID
-          ? {
-              ...i,
-              InspectionDate: payload.inspectionDate || null,
-              Findings: payload.findings || null,
-            }
-          : i
-      )
-    );
-    setSelected((prev) =>
-      prev
-        ? {
-            ...prev,
-            InspectionDate: payload.inspectionDate || null,
-            Findings: payload.findings || null,
-          }
-        : null
-    );
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Reflect in UI
+      setInspections((prev) =>
+        prev.map((i) =>
+          i.InspectionID === payload.inspectionID
+            ? { ...i, InspectionDate: payload.inspectionDate || null, Findings: payload.findings || null }
+            : i
+        )
+      );
+      setSelected((prev) =>
+        prev
+          ? { ...prev, InspectionDate: payload.inspectionDate || null, Findings: payload.findings || null }
+          : null
+      );
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Save failed: " + (err as Error).message);
+    }
   }
 
   const onDateBlur = () => saveField({ inspectionDate: date });
@@ -126,18 +99,15 @@ export default function InspectorDashboard() {
       <AppSidebar role="inspector" />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col p-8 bg-black text-white space-y-6">
-          {/* Dynamic title */}
+        <div className="flex flex-1 flex-col p-8 space-y-6">
           <h1 className="text-2xl font-semibold">
-            {selected
-              ? `Inspection #${selected.InspectionID}`
-              : "Inspector Dashboard"}
+            {selected ? `Inspection #${selected.InspectionID}` : "Inspector Dashboard"}
           </h1>
 
           {!selected ? (
             <section className="space-y-4">
               <h2 className="text-xl font-medium">Your Assigned Inspections</h2>
-              <Table className="bg-black text-white">
+              <Table>
                 <TableCaption>Click to resume or start</TableCaption>
                 <TableHeader>
                   <TableRow>
@@ -152,7 +122,7 @@ export default function InspectorDashboard() {
                   {inspections.map((insp) => (
                     <TableRow
                       key={insp.InspectionID}
-                      className="bg-black cursor-pointer"
+                      className="cursor-pointer"
                       onClick={() => {
                         setSelected(insp);
                         setDate(insp.InspectionDate || "");
@@ -166,8 +136,8 @@ export default function InspectorDashboard() {
                       <TableCell>{statusOf(insp)}</TableCell>
                     </TableRow>
                   ))}
-                  {!inspections.length && (
-                    <TableRow className="bg-black">
+                  {inspections.length === 0 && (
+                    <TableRow>
                       <TableCell colSpan={5} className="text-center">
                         No assignments.
                       </TableCell>
@@ -178,8 +148,7 @@ export default function InspectorDashboard() {
             </section>
           ) : (
             <section className="space-y-6">
-              {/* Instructions */}
-              <Card className="p-4 bg-black border border-gray-700">
+              <Card>
                 <CardContent>
                   <p className="text-sm">
                     <strong>Instructions:</strong> {selected.instructions}
@@ -187,32 +156,28 @@ export default function InspectorDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Fixed details */}
-              <Card className="p-4 bg-black border border-gray-700">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-medium">Details</CardTitle>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-2 gap-4">
-                  {([
-                    ["Inspection ID", selected.InspectionID],
-                    ["Pipeline ID", selected.PipelineID],
-                    ["Segment ID", selected.SegmentID],
-                    ["Inspector ID", selected.InspectorID],
-                  ] as [string, number][]).map(([lbl, val]) => (
+                  {(
+                    [
+                      ["Inspection ID", selected.InspectionID],
+                      ["Pipeline ID", selected.PipelineID],
+                      ["Segment ID", selected.SegmentID],
+                      ["Inspector ID", selected.InspectorID],
+                    ] as [string, number][]
+                  ).map(([lbl, val]) => (
                     <div key={lbl} className="grid gap-1">
                       <label className="text-xs">{lbl}</label>
-                      <Input
-                        value={String(val)}
-                        disabled
-                        className="bg-black text-white border-gray-600"
-                      />
+                      <Input value={String(val)} disabled />
                     </div>
                   ))}
                 </CardContent>
               </Card>
 
-              {/* Findings form */}
-              <Card className="p-4 bg-black border border-gray-700">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-medium">Your Findings</CardTitle>
                 </CardHeader>
@@ -224,7 +189,6 @@ export default function InspectorDashboard() {
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       onBlur={onDateBlur}
-                      className="bg-black text-white border-gray-600"
                     />
                   </div>
                   <div className="grid gap-1">
@@ -234,7 +198,6 @@ export default function InspectorDashboard() {
                       value={findings}
                       onChange={(e) => setFindings(e.target.value)}
                       onBlur={onFindingsBlur}
-                      className="bg-black text-white border-gray-600 placeholder-gray-500"
                       placeholder="Describe your findings…"
                     />
                   </div>
@@ -243,7 +206,6 @@ export default function InspectorDashboard() {
                   <Button variant="outline" onClick={() => setSelected(null)}>
                     Back
                   </Button>
-                  {/* Only show Submit when both fields are non-empty */}
                   {date && findings ? (
                     <Button onClick={() => saveField({ inspectionDate: date, findings })}>
                       Submit
