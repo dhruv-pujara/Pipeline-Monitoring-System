@@ -92,6 +92,30 @@ app.post("/update", (req, res) => {
 });
 
 
+app.post("/delete", (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: "User ID is required for deletion." });
+  }
+
+  const q = "DELETE FROM Login WHERE id = ?";
+
+  db.query(q, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting user:", err);
+      return res.status(500).json({ message: "Database error while deleting user." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found or already deleted." });
+    }
+
+    return res.status(200).json({ message: "User deleted successfully." });
+  });
+});
+
+
 
 
 

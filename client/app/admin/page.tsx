@@ -345,11 +345,17 @@ function UpdateUserForm() {
 
       {/* Update Form */}
       <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-        <div>
-          <Label htmlFor="id">ID</Label>
-          <Input id="id" name="id" value={form.id} onChange={handleChange} />
-        </div>
-
+      <div>
+  <Label htmlFor="id">ID</Label>
+  <Input
+    id="id"
+    name="id"
+    value={form.id}
+    readOnly // 👈 disables editing
+    className="bg-gray-100 cursor-not-allowed"
+  />
+      </div>
+    
         <div>
           <Label htmlFor="name">Full Name</Label>
           <Input id="name" name="name" value={form.name} onChange={handleChange} />
@@ -404,21 +410,59 @@ function UpdateUserForm() {
   );
 }
 
-
-
-
 function DeleteUserForm() {
-  const [users, setUsers] = useState<User[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [idToDelete, setIdToDelete] = useState('')
+  const [users, setUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [idToDelete, setIdToDelete] = useState('');
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const res = await fetch("http://localhost:8800/users");
+        const json: any = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed to fetch users");
+        setUsers(json);
+      } catch (err) {
+        console.error("Error loading users:", err);
+      }
+    }
+    loadUsers();
+  }, []);
+
+  const handleDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:8800/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: idToDelete }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(data.message || 'User deleted successfully');
+        setIdToDelete('');
+        setUsers(users.filter(user => user.id !== idToDelete));
+      } else {
+        alert(data.message || 'Delete failed');
+      }
+    } catch (error) {
+      alert('Network error');
+      console.error("Network error:", error);
+    }
+  };
+
   return (
     <>
       <h3 className="text-lg font-medium">Delete User</h3>
 
-      <form className="space-y-6">
-        <input placeholder="User ID to delete" className="w-full border px-3 py-2 rounded-md" />
-     
-      </form>
+      <input
+        placeholder="Search User"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full border px-3 py-2 rounded-md my-4"
+      />
 
       <Table>
         <TableHeader>
@@ -435,28 +479,49 @@ function DeleteUserForm() {
         </TableHeader>
         <TableBody>
           {users
-            .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter(u =>
+              u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              String(u.id).toLowerCase().includes(searchTerm.toLowerCase())
+            )
             .map(u => (
-              <TableRow key={u.id}>
+              <TableRow
+                key={u.id}
+                onClick={() => setIdToDelete(u.id)}
+                className="cursor-pointer hover:bg-muted"
+              >
+                <TableCell>{u.id}</TableCell>
                 <TableCell>{u.name}</TableCell>
                 <TableCell>{u.username}</TableCell>
                 <TableCell>{u.email}</TableCell>
+                <TableCell>{u.phone || '-'}</TableCell>
+                <TableCell>{u.password || '-'}</TableCell>
                 <TableCell>{u.role}</TableCell>
-                <TableCell>
-                  <Button onClick={() => { /* populate form for editing */ }}>
-                    Edit
-                  </Button>
-                </TableCell>
+                <TableCell>{(u as any).created_at || '-'}</TableCell>
               </TableRow>
-            ))
-          }
+            ))}
         </TableBody>
       </Table>
 
-      <button className="bg-destructive text-white px-4 py-2 rounded-md">Delete</button>
+      <form onSubmit={handleDelete} className="space-y-4 mt-6">
+        <div>
+          <Label htmlFor="idToDelete">User ID to delete</Label>
+          <Input
+            id="idToDelete"
+            name="idToDelete"
+            value={idToDelete}
+            readOnly
+            className="bg-gray-100 cursor-not-allowed"
+          />
+        </div>
 
-
-  
+        <button type="submit" className="bg-destructive text-white px-4 py-2 rounded-md">
+          Delete
+        </button>
+      </form>
     </>
-  )
+  );
 }
+
+
