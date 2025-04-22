@@ -51,30 +51,70 @@ app.post("/login", (req, res) => {
   })
 })
 
-// GET /users → returns all rows from the Login table
+// To get all users in the database
 app.get("/users", (req, res) => {
-  const q = `
-    SELECT
-      id,
-      name,
-      username,
-      email,
-      phone,
-      role,
-      created_at
-    FROM \`Login\`
-    ORDER BY id
-  `;
-
-  db.query(q, (err, results) => {
+  const q1 = "SELECT id, name, username, email, phone, password_hash AS password, role, created_at FROM Login ORDER BY id";
+  db.query(q1, (err, results) => {
     if (err) {
       console.error("DB error fetching users:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    // results is an array of { id, name, username, … }
     res.json(results);
   });
 });
+
+
+// To update users login information
+app.post("/update", (req, res) => {
+  const { id, name, username, email, phone, password, role } = req.body;
+  const q = `
+    UPDATE Login
+    SET 
+      name = ?, 
+      username = ?, 
+      email = ?, 
+      phone = ?, 
+      password_hash = ?, 
+      role = ?
+    WHERE id = ?
+  `;
+
+  const values = [name, username, email, phone, password, role, id];
+
+  db.query(q, values, (err, result) => {
+    if (err) {
+      console.error("Error updating user:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.status(200).json({ message: "User updated successfully" });
+  });
+});
+
+// To delete a user 
+app.post("/delete", (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: "User ID is required for deletion." });
+  }
+
+  const q = "DELETE FROM Login WHERE id = ?";
+
+  db.query(q, [id], (err, result) => {
+    if (err) {
+      console.error("Error deleting user:", err);
+      return res.status(500).json({ message: "Database error while deleting user." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found or already deleted." });
+    }
+
+    return res.status(200).json({ message: "User deleted successfully." });
+  });
+});
+
 
 
 
