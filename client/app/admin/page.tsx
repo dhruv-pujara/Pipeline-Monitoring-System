@@ -214,8 +214,9 @@ type User = {
   name: string;
   username: string;
   email: string;
-  phone?: string;
+  phone: string;
   role: string;
+  password: string;
 };
 
 function UpdateUserForm() {
@@ -225,7 +226,7 @@ function UpdateUserForm() {
     username: '',
     email: '',
     phone: '',
-    password: '',
+    password: '••••••••',
     role: '',
   });
 
@@ -322,7 +323,14 @@ function UpdateUserForm() {
         </TableHeader>
         <TableBody>
   {users
-    .filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  .filter(u =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(u.id).toLowerCase().includes(searchTerm.toLowerCase())
+  )
+  
+  
     .map(u => (
       <TableRow key={u.id}>
         <TableCell>{u.id}</TableCell>
@@ -330,24 +338,22 @@ function UpdateUserForm() {
         <TableCell>{u.username}</TableCell>
         <TableCell>{u.email}</TableCell>
         <TableCell>{u.phone || '-'}</TableCell>
-        <TableCell>••••••••</TableCell> {/* password is not returned from backend */}
+        <TableCell>••••••••</TableCell>
         <TableCell>{u.role}</TableCell>
         <TableCell>{(u as any).created_at || '-'}</TableCell>
         <TableCell>
-          <Button onClick={() => { /* populate form for editing */ }}>
-            Edit
-          </Button>
+        <Button onClick={() => setForm({ ...u, password: '' })}>
+  Edit
+</Button>
         </TableCell>
       </TableRow>
     ))
   }
 </TableBody>
-
- 
       </Table>
 
       <div>
-        <Label htmlFor="name">ID</Label>
+        <Label htmlFor="id">ID</Label>
         <Input
           id="id"
           name="id"
@@ -410,22 +416,27 @@ function UpdateUserForm() {
       </div>
 
       <div>
-        <Label htmlFor="role">Role</Label>
-        <Select
-          value={form.role}
-          onValueChange={(val) => setRole(val)}
-        >
-          <SelectTrigger id="role" name="role">
-            <SelectValue placeholder="Select a role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="user">Owner</SelectItem>
-              <SelectItem value="user">Inspector</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+
+      <Label htmlFor="role">Role</Label>
+<Select
+  value={form.role}
+  onValueChange={(val) =>
+    setForm((prev) => ({ ...prev, role: val }))
+  }
+>
+  <SelectTrigger id="role" name="role">
+    <SelectValue placeholder="Select a role" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectGroup>
+      <SelectItem value="admin">Admin</SelectItem>
+      <SelectItem value="owner">Owner</SelectItem>
+      <SelectItem value="inspector">Inspector</SelectItem>
+    </SelectGroup>
+  </SelectContent>
+</Select>
+
+     
       </div>
 
 
