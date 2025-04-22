@@ -115,9 +115,8 @@ app.post("/delete", (req, res) => {
   });
 });
 
-// 🔍 Get all inspectors
 app.get("/inspectors", (req, res) => {
-  const q = "SELECT id AS InspectorID, name FROM Login WHERE role = 'Inspector'";
+  const q = "SELECT InspectorID, Name, Phone, Email FROM INSPECTOR";
   db.query(q, (err, results) => {
     if (err) {
       console.error("Error fetching inspectors:", err);
@@ -151,14 +150,14 @@ app.get("/segments", (req, res) => {
   });
 });
 
-// ✅ Assign an inspection
+// Assign an inspection
 app.post("/assign-inspection", (req, res) => {
-  const { inspectorId, pipelineId, segmentId, inspectionDate } = req.body;
+  const { inspectorId, pipelineId, segmentId } = req.body;
   const q = `
-    INSERT INTO Inspection (PipelineID, InspectorID, SegmentID, InspectionDate)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO Inspection (PipelineID, InspectorID, SegmentID)
+    VALUES (?, ?, ?)
   `;
-  db.query(q, [pipelineId, inspectorId, segmentId, inspectionDate], (err, result) => {
+  db.query(q, [pipelineId, inspectorId, segmentId], (err, result) => {
     if (err) {
       console.error("Error assigning inspection:", err);
       return res.status(500).json({ message: "Failed to assign inspection" });
