@@ -13,7 +13,7 @@ export default function MapboxPipelineMap() {
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v11",
+      style: "mapbox://styles/mapbox/dark-v10",
       center: [-115.0, 54.0],
       zoom: 5,
     });

@@ -32,24 +32,55 @@ app.post("/register", (req, res) => {
 })
 
 // Login API
+// app.post("/login", (req, res) => {
+//   const { username, password } = req.body
+//   const q = "SELECT * FROM Login WHERE username = ?"
+
+//   db.query(q, [username], (err, results) => {
+//     if (err) return res.status(500).json(err)
+//     if (results.length === 0) return res.status(401).json({ error: "User not found" })
+
+//     const user = results[0]
+
+//     if (user.password_hash !== password) {
+//       return res.status(401).json({ error: "Invalid password" })
+//     }
+
+//     const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
+//     return res.status(200).json({ message: "Login successful", token, role: user.role })
+//   })
+// })
+
 app.post("/login", (req, res) => {
-  const { username, password } = req.body
-  const q = "SELECT * FROM Login WHERE username = ?"
+  const { username, password } = req.body;
+  const q = "SELECT * FROM Login WHERE username = ?";
 
   db.query(q, [username], (err, results) => {
-    if (err) return res.status(500).json(err)
-    if (results.length === 0) return res.status(401).json({ error: "User not found" })
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0) return res.status(401).json({ error: "User not found" });
 
-    const user = results[0]
+    const user = results[0];
 
     if (user.password_hash !== password) {
-      return res.status(401).json({ error: "Invalid password" })
+      return res.status(401).json({ error: "Invalid password" });
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
-    return res.status(200).json({ message: "Login successful", token, role: user.role })
-  })
-})
+    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      role: user.role,
+      id: user.id,
+      name: user.name,
+      email: user.email
+    });
+  });
+});
+
+
 
 // To get all users in the database
 app.get("/users", (req, res) => {
