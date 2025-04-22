@@ -91,10 +91,10 @@ app.get("/pipelines", authenticateToken, (req, res) => {
 
 // Add a new pipeline
 app.post("/pipelines", authenticateToken, (req, res) => {
-  const { PipelineID, Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude } = req.body;
+  const { Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude } = req.body;
   
   const q = "INSERT INTO PIPELINE (Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude) VALUES (?)";
-  const values = [PipelineID, Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude];
+  const values = [Location, Diameter, Material, Status, InstallationDate, Longitude, Latitude];
   
   db.query(q, [values], (err, data) => {
     if (err) return res.status(500).json(err);
@@ -129,10 +129,10 @@ app.get("/segments", authenticateToken, (req, res) => {
 
 // Add a new segment
 app.post("/segments", authenticateToken, (req, res) => {
-  const { segmentId, PipelineID, PressureLevel, FlowRate, LastModifiedDate } = req.body;
+  const {PipelineID, PressureLevel, FlowRate, LastModifiedDate } = req.body;
   
   const q = "INSERT INTO SEGMENT (PipelineID, PressureLevel, FlowRate, LastModifiedDate) VALUES (?)";
-  const values = [segmentId, PipelineID, PressureLevel, FlowRate, LastModifiedDate];
+  const values = [ PipelineID, PressureLevel, FlowRate, LastModifiedDate];
   
   db.query(q, [values], (err, data) => {
     if (err) return res.status(500).json(err);

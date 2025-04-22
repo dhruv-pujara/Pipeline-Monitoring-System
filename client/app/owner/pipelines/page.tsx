@@ -41,9 +41,17 @@ export default function Page() {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Pipeline form state
   const [showPipelineForm, setShowPipelineForm] = useState(false);
-  const [newPipeline, setNewPipeline] = useState<Partial<Pipeline>>({
-    PipelineID: undefined,
+  const [pipelineForm, setPipelineForm] = useState<{
+    Location: string;
+    Diameter?: number;
+    Material: string;
+    Status: string;
+    InstallationDate: string;
+    Longitude?: number;
+    Latitude?: number;
+  }>({
     Location: "",
     Diameter: undefined,
     Material: "",
@@ -53,9 +61,14 @@ export default function Page() {
     Latitude: undefined,
   });
 
+  // Segment form state
   const [showSegmentForm, setShowSegmentForm] = useState(false);
-  const [newSegment, setNewSegment] = useState<Partial<Segment>>({
-    SegmentID: undefined,
+  const [segmentForm, setSegmentForm] = useState<{
+    PipelineID?: number;
+    PressureLevel?: number;
+    FlowRate?: number;
+    LastModifiedDate: string;
+  }>({
     PipelineID: undefined,
     PressureLevel: undefined,
     FlowRate: undefined,
@@ -77,10 +90,11 @@ export default function Page() {
         }),
       ]);
       const [pData, sData] = await Promise.all([pRes.json(), sRes.json()]);
-      if (Array.isArray(pData)) setPipelines(pData);
-      if (Array.isArray(sData)) setSegments(sData);
+      setPipelines(Array.isArray(pData) ? pData : []);
+      setSegments(Array.isArray(sData) ? sData : []);
     } catch (err) {
-      console.error("Fetch error:", err);
+      alert("Failed to load data.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -90,21 +104,79 @@ export default function Page() {
     fetchData();
   }, []);
 
-  // Add a new pipeline
+  // Delete helper
+  const deleteWithConfirm = async (
+    url: string,
+    onSuccess: () => void,
+    message: string
+  ) => {
+    if (!confirm(message)) return;
+    try {
+      const res = await fetch(url, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        alert("Delete failed: " + text);
+        return;
+      }
+      onSuccess();
+    } catch (err: any) {
+      alert("Error deleting: " + err.message);
+      console.error(err);
+    }
+  };
+
+  // Add pipeline
   const handleAddPipeline = async () => {
-    console.log("Adding pipeline:", newPipeline);
-    const res = await fetch("http://localhost:8800/pipelines", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(newPipeline),
-    });
-    if (res.ok) {
+    const {
+      Location,
+      Diameter,
+      Material,
+      Status,
+      InstallationDate,
+      Longitude,
+      Latitude,
+    } = pipelineForm;
+
+    if (
+      !Location ||
+      Diameter == null ||
+      !Material ||
+      !Status ||
+      !InstallationDate ||
+      Longitude == null ||
+      Latitude == null
+    ) {
+      alert("Please fill in all pipeline fields.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:8800/pipelines", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          Location,
+          Diameter,
+          Material,
+          Status,
+          InstallationDate,
+          Longitude,
+          Latitude,
+        }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        alert("Add pipeline failed: " + text);
+        return;
+      }
       setShowPipelineForm(false);
-      setNewPipeline({
-        PipelineID: undefined,
+      setPipelineForm({
         Location: "",
         Diameter: undefined,
         Material: "",
@@ -114,50 +186,58 @@ export default function Page() {
         Latitude: undefined,
       });
       await fetchData();
-    } else {
-      console.error("Add pipeline failed:", await res.text());
+    } catch (err: any) {
+      alert("Error adding pipeline: " + err.message);
+      console.error(err);
     }
   };
 
-  // Add a new segment
+  // Add segment
   const handleAddSegment = async () => {
-    console.log("Adding segment:", newSegment);
-    const res = await fetch("http://localhost:8800/segments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(newSegment),
-    });
-    if (res.ok) {
+    const { PipelineID, PressureLevel, FlowRate, LastModifiedDate } =
+      segmentForm;
+
+    if (
+      PipelineID == null ||
+      PressureLevel == null ||
+      FlowRate == null ||
+      !LastModifiedDate
+    ) {
+      alert("Please fill in all segment fields.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:8800/segments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          PipelineID,
+          PressureLevel,
+          FlowRate,
+          LastModifiedDate,
+        }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        alert("Add segment failed: " + text);
+        return;
+      }
       setShowSegmentForm(false);
-      setNewSegment({
-        SegmentID: undefined,
+      setSegmentForm({
         PipelineID: undefined,
         PressureLevel: undefined,
         FlowRate: undefined,
         LastModifiedDate: "",
       });
       await fetchData();
-    } else {
-      console.error("Add segment failed:", await res.text());
+    } catch (err: any) {
+      alert("Error adding segment: " + err.message);
+      console.error(err);
     }
-  };
-
-  // Delete helper
-  const deleteWithConfirm = async (
-    url: string,
-    onSuccess: () => void,
-    message: string
-  ) => {
-    if (!confirm(message)) return;
-    const res = await fetch(url, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) onSuccess();
-    else console.error("Delete failed:", await res.text());
   };
 
   // Filtering
@@ -234,7 +314,7 @@ export default function Page() {
                               deleteWithConfirm(
                                 `http://localhost:8800/pipelines/${p.PipelineID}`,
                                 fetchData,
-                                `Are you sure you want to delete pipeline #${p.PipelineID}?`
+                                `Delete pipeline #${p.PipelineID}?`
                               )
                             }
                           >
@@ -264,24 +344,11 @@ export default function Page() {
                   <div className="p-4 border rounded space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <Input
-                        type="number"
-                        placeholder="Pipeline ID"
-                        value={newPipeline.PipelineID ?? ""}
-                        onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
-                            PipelineID: e.target.value
-                              ? parseInt(e.target.value, 10)
-                              : undefined,
-                          }))
-                        }
-                      />
-                      <Input
                         placeholder="Location"
-                        value={newPipeline.Location || ""}
+                        value={pipelineForm.Location}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             Location: e.target.value,
                           }))
                         }
@@ -289,43 +356,55 @@ export default function Page() {
                       <Input
                         type="number"
                         placeholder="Diameter"
-                        value={newPipeline.Diameter ?? ""}
+                        value={pipelineForm.Diameter ?? ""}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             Diameter: e.target.value
                               ? parseInt(e.target.value, 10)
                               : undefined,
                           }))
-                        }
-                      />
+                        } />
                       <Input
                         placeholder="Material"
-                        value={newPipeline.Material || ""}
+                        value={pipelineForm.Material}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             Material: e.target.value,
                           }))
                         }
                       />
-                      <Input
-                        placeholder="Status"
-                        value={newPipeline.Status || ""}
+
+                      {/* Fixed Status select */}
+                      <select
+                        name="Status"
+                        value={pipelineForm.Status}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             Status: e.target.value,
                           }))
                         }
-                      />
+                        className="col-span-2 p-2 border rounded"
+                      >
+                        <option value="" disabled hidden>
+                          Status
+                        </option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Under Maintenance">
+                          Under Maintenance
+                        </option>
+                      </select>
+
                       <Input
                         type="date"
                         placeholder="Installed"
-                        value={newPipeline.InstallationDate || ""}
+                        value={pipelineForm.InstallationDate}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             InstallationDate: e.target.value,
                           }))
                         }
@@ -333,12 +412,13 @@ export default function Page() {
                       <Input
                         type="number"
                         placeholder="Longitude"
-                        value={newPipeline.Longitude ?? ""}
+                        step="any"
+                        value={pipelineForm.Longitude ?? ""}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             Longitude: e.target.value
-                              ? parseInt(e.target.value, 10)
+                              ? parseFloat(e.target.value)
                               : undefined,
                           }))
                         }
@@ -346,12 +426,13 @@ export default function Page() {
                       <Input
                         type="number"
                         placeholder="Latitude"
-                        value={newPipeline.Latitude ?? ""}
+                        step="any"
+                        value={pipelineForm.Latitude ?? ""}
                         onChange={(e) =>
-                          setNewPipeline((prev) => ({
-                            ...prev,
+                          setPipelineForm((f) => ({
+                            ...f,
                             Latitude: e.target.value
-                              ? parseInt(e.target.value, 10)
+                              ? parseFloat(e.target.value)
                               : undefined,
                           }))
                         }
@@ -402,7 +483,7 @@ export default function Page() {
                               deleteWithConfirm(
                                 `http://localhost:8800/segments/${s.SegmentID}`,
                                 fetchData,
-                                `Are you sure you want to delete segment #${s.SegmentID}?`
+                                `Delete segment #${s.SegmentID}?`
                               )
                             }
                           >
@@ -433,24 +514,11 @@ export default function Page() {
                     <div className="grid grid-cols-2 gap-3">
                       <Input
                         type="number"
-                        placeholder="Segment ID"
-                        value={newSegment.SegmentID ?? ""}
-                        onChange={(e) =>
-                          setNewSegment((prev) => ({
-                            ...prev,
-                            SegmentID: e.target.value
-                              ? parseInt(e.target.value, 10)
-                              : undefined,
-                          }))
-                        }
-                      />
-                      <Input
-                        type="number"
                         placeholder="Pipeline ID"
-                        value={newSegment.PipelineID ?? ""}
+                        value={segmentForm.PipelineID ?? ""}
                         onChange={(e) =>
-                          setNewSegment((prev) => ({
-                            ...prev,
+                          setSegmentForm((f) => ({
+                            ...f,
                             PipelineID: e.target.value
                               ? parseInt(e.target.value, 10)
                               : undefined,
@@ -460,10 +528,10 @@ export default function Page() {
                       <Input
                         type="number"
                         placeholder="Pressure Level"
-                        value={newSegment.PressureLevel ?? ""}
+                        value={segmentForm.PressureLevel ?? ""}
                         onChange={(e) =>
-                          setNewSegment((prev) => ({
-                            ...prev,
+                          setSegmentForm((f) => ({
+                            ...f,
                             PressureLevel: e.target.value
                               ? parseInt(e.target.value, 10)
                               : undefined,
@@ -473,10 +541,10 @@ export default function Page() {
                       <Input
                         type="number"
                         placeholder="Flow Rate"
-                        value={newSegment.FlowRate ?? ""}
+                        value={segmentForm.FlowRate ?? ""}
                         onChange={(e) =>
-                          setNewSegment((prev) => ({
-                            ...prev,
+                          setSegmentForm((f) => ({
+                            ...f,
                             FlowRate: e.target.value
                               ? parseInt(e.target.value, 10)
                               : undefined,
@@ -486,10 +554,10 @@ export default function Page() {
                       <Input
                         type="date"
                         placeholder="Last Modified"
-                        value={newSegment.LastModifiedDate || ""}
+                        value={segmentForm.LastModifiedDate}
                         onChange={(e) =>
-                          setNewSegment((prev) => ({
-                            ...prev,
+                          setSegmentForm((f) => ({
+                            ...f,
                             LastModifiedDate: e.target.value,
                           }))
                         }
