@@ -87,7 +87,7 @@ export default function ViewFilesPage() {
                     <TableCell>{insp.InspectionID}</TableCell>
                     <TableCell>{insp.PipelineID}</TableCell>
                     <TableCell>{insp.SegmentID}</TableCell>
-                    <TableCell>{insp.InspectionDate ? new Date(insp.InspectionDate).toISOString().split("T")[0] : ""}</TableCell>
+                    <TableCell>{insp.InspectionDate.substring(0, 10)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -113,7 +113,7 @@ export default function ViewFilesPage() {
             </h2>
             <p><strong>Pipeline:</strong> {selected.PipelineID}</p>
             <p><strong>Segment:</strong> {selected.SegmentID}</p>
-            <p><strong>Date:</strong> {selected.InspectionDate && new Date(selected.InspectionDate).toLocaleDateString()}</p>
+            <p><strong>Date:</strong> {selected.InspectionDate.substring(0, 10)}</p>
             <p><strong>Findings:</strong> {selected.Findings}</p>
           </div>
 

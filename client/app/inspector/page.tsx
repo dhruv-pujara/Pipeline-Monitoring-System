@@ -5,11 +5,20 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
 import {
-  Table, TableHeader, TableRow, TableHead,
-  TableBody, TableCell, TableCaption,
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableCaption,
 } from "@/components/ui/table";
 import {
-  Card, CardHeader, CardTitle, CardContent, CardFooter,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +55,10 @@ export default function InspectorDashboard() {
   }, []);
 
   // Determine if selected inspection has already been submitted
-  const isSubmitted = Boolean(selected?.InspectionDate) && Boolean(selected?.Findings);
+  const isSubmitted =
+    selected?.InspectionDate !== "0000-00-00" &&
+    selected?.Findings !== "-";
+
 
   // Save date or findings
   async function saveField(updated: {
@@ -62,11 +74,14 @@ export default function InspectorDashboard() {
     };
 
     try {
-      const res = await fetch("http://localhost:8800/updateInspection", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        "http://localhost:8800/updateInspection",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       // Update local state
@@ -140,7 +155,7 @@ export default function InspectorDashboard() {
                         onClick={() => {
                           setSelected(insp);
                           const formattedDate = insp.InspectionDate
-                            ? new Date(insp.InspectionDate).toISOString().split("T")[0]
+                            ? insp.InspectionDate.substring(0, 10)
                             : "";
                           setDate(formattedDate);
                           setFindings(insp.Findings || "");

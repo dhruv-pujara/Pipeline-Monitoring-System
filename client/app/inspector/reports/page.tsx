@@ -46,20 +46,22 @@ export default function ReportsPage() {
   const [issueType, setIssueType] = useState("");
   const [severity, setSeverity] = useState("");
   const [justSubmitted, setJustSubmitted] = useState(false);
+  const [inspectorID, setInspectorID] = useState<number | null>(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const inspectorID = user?.id;
+    const id = user?.id;
+    setInspectorID(id);
 
     fetch("http://localhost:8800/inspector/completed-inspections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inspectorID }),
-    })    
+      body: JSON.stringify({ inspectorID: id }),
+    })
       .then((res) => res.json())
       .then((data: Inspection[]) => {
         const completed = data.filter(
-          (i) => i.InspectionDate && i.Findings
+          (i) => i.InspectionDate !== "0000-00-00" && i.Findings !== "-"
         );
         setInspections(completed);
       })
@@ -68,12 +70,6 @@ export default function ReportsPage() {
 
   const submitIssue = async () => {
     if (!selected) return;
-
-    const payload = {
-      inspectionID: selected.InspectionID,
-      issueType,
-      severity,
-    };
 
     try {
       const res = await fetch("http://localhost:8800/inspector/report-issue", {
@@ -85,7 +81,6 @@ export default function ReportsPage() {
           Severity: severity,
         }),
       });
-      
 
       if (!res.ok) throw new Error("Failed to submit issue");
 
@@ -139,9 +134,7 @@ export default function ReportsPage() {
                         <TableCell>{insp.PipelineID}</TableCell>
                         <TableCell>{insp.SegmentID}</TableCell>
                         <TableCell>{insp.InspectorID}</TableCell>
-                        <TableCell>
-                          {insp.InspectionDate ? new Date(insp.InspectionDate).toISOString().split("T")[0] : ""}
-                        </TableCell>
+                        <TableCell>{insp.InspectionDate.substring(0, 10)}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -167,11 +160,11 @@ export default function ReportsPage() {
                   </div>
                   <div>
                     <label className="text-sm">Inspector ID</label>
-                    <Input value={selected.InspectorID} disabled />
+                    <Input value={inspectorID ?? selected.InspectorID} disabled />
                   </div>
                   <div>
                     <label className="text-sm">Date</label>
-                    <Input value={selected.InspectionDate && new Date(selected.InspectionDate).toLocaleDateString()} disabled />
+                    <Input value={selected.InspectionDate.substring(0, 10)} disabled />
                   </div>
                   <div className="col-span-2">
                     <label className="text-sm">Findings</label>
@@ -205,12 +198,7 @@ export default function ReportsPage() {
                         <SelectValue placeholder="Select severity" />
                       </SelectTrigger>
                       <SelectContent>
-                        {[
-                          "Low",
-                          "Medium",
-                          "High",
-                          "Critical",
-                        ].map((level) => (
+                        {["Low", "Medium", "High", "Critical"].map((level) => (
                           <SelectItem key={level} value={level}>
                             {level}
                           </SelectItem>
