@@ -1,9 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/ui/app-sidebar";
-import { SiteHeader } from "@/components/ui/site-header";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import {
   Table,
   TableHeader,
@@ -13,38 +27,76 @@ import {
   TableCell,
   TableCaption,
 } from "@/components/ui/table";
-import ReportIssueCard from "@/components/ui/report-issue-card";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/ui/app-sidebar";
+import { SiteHeader } from "@/components/ui/site-header";
 
 interface Inspection {
   InspectionID: number;
   PipelineID: number;
   InspectorID: number;
   SegmentID: number;
-  InspectionDate: string | null;
-  Findings: string | null;
+  InspectionDate: string;
+  Findings: string;
 }
 
 export default function ReportsPage() {
-  // TODO: pull this from your auth/session
-  const inspectorID = 201;
-
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [selected, setSelected] = useState<Inspection | null>(null);
+  const [issueType, setIssueType] = useState("");
+  const [severity, setSeverity] = useState("");
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   useEffect(() => {
-    fetch(`http://localhost:8800/inspections?inspectorID=${inspectorID}`)
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const inspectorID = user?.id;
+
+    fetch("http://localhost:8800/inspector/completed-inspections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inspectorID }),
+    })    
       .then((res) => res.json())
       .then((data: Inspection[]) => {
-        // keep only those with both date + findings set
         const completed = data.filter(
-          (i) => i.InspectionDate !== null && i.Findings !== null
+          (i) => i.InspectionDate && i.Findings
         );
         setInspections(completed);
       })
-      .catch((err) =>
-        console.error("Error fetching completed inspections:", err)
-      );
-  }, [inspectorID]);
+      .catch((err) => console.error("Error fetching completed inspections:", err));
+  }, []);
+
+  const submitIssue = async () => {
+    if (!selected) return;
+
+    const payload = {
+      inspectionID: selected.InspectionID,
+      issueType,
+      severity,
+    };
+
+    try {
+      const res = await fetch("http://localhost:8800/inspector/report-issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          InspectionID: selected.InspectionID,
+          IssueType: issueType,
+          Severity: severity,
+        }),
+      });
+      
+
+      if (!res.ok) throw new Error("Failed to submit issue");
+
+      setIssueType("");
+      setSeverity("");
+      setJustSubmitted(true);
+    } catch (err) {
+      alert("Issue submission failed");
+      console.error(err);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -54,9 +106,9 @@ export default function ReportsPage() {
         <div className="p-8 flex flex-col gap-6">
           {!selected ? (
             <>
-              <h1 className="text-2xl font-bold">Completed Inspections</h1>
+              <h1 className="text-2xl font-bold">Report Issues for your Inspections</h1>
               <Table>
-                <TableCaption>Click an inspection to report issues</TableCaption>
+                <TableCaption>Click to report an issue</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
@@ -67,42 +119,119 @@ export default function ReportsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inspections.map((insp) => (
-                    <TableRow
-                      key={insp.InspectionID}
-                      className="cursor-pointer hover:bg-gray-100"
-                      onClick={() => setSelected(insp)}
-                    >
-                      <TableCell>{insp.InspectionID}</TableCell>
-                      <TableCell>{insp.PipelineID}</TableCell>
-                      <TableCell>{insp.SegmentID}</TableCell>
-                      <TableCell>{insp.InspectorID}</TableCell>
-                      <TableCell>{insp.InspectionDate}</TableCell>
-                    </TableRow>
-                  ))}
-                  {inspections.length === 0 && (
+                  {inspections.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center">
-                        No completed inspections found.
+                        No completed inspections available.
                       </TableCell>
                     </TableRow>
+                  ) : (
+                    inspections.map((insp) => (
+                      <TableRow
+                        key={insp.InspectionID}
+                        className="cursor-pointer hover:bg-gray-100"
+                        onClick={() => {
+                          setSelected(insp);
+                          setJustSubmitted(false);
+                        }}
+                      >
+                        <TableCell>{insp.InspectionID}</TableCell>
+                        <TableCell>{insp.PipelineID}</TableCell>
+                        <TableCell>{insp.SegmentID}</TableCell>
+                        <TableCell>{insp.InspectorID}</TableCell>
+                        <TableCell>
+                          {insp.InspectionDate ? new Date(insp.InspectionDate).toISOString().split("T")[0] : ""}
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
             </>
           ) : (
-            <>
-              <h1 className="text-2xl font-bold">
-                Inspection #{selected.InspectionID}
-              </h1>
-              <ReportIssueCard inspectionID={selected.InspectionID} />
-              <button
-                className="mt-4 text-sm text-gray-500 underline"
+            <div className="space-y-6">
+              <h1 className="text-2xl font-bold">Inspection #{selected.InspectionID}</h1>
+
+              <Card className="border rounded-lg">
+                <CardHeader>
+                  <CardTitle>Inspection Details</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm">Pipeline ID</label>
+                    <Input value={selected.PipelineID} disabled />
+                  </div>
+                  <div>
+                    <label className="text-sm">Segment ID</label>
+                    <Input value={selected.SegmentID} disabled />
+                  </div>
+                  <div>
+                    <label className="text-sm">Inspector ID</label>
+                    <Input value={selected.InspectorID} disabled />
+                  </div>
+                  <div>
+                    <label className="text-sm">Date</label>
+                    <Input value={selected.InspectionDate && new Date(selected.InspectionDate).toLocaleDateString()} disabled />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm">Findings</label>
+                    <Textarea value={selected.Findings} disabled />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border rounded-lg">
+                <CardHeader>
+                  <CardTitle>Report an Issue</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm">Inspection ID</label>
+                    <Input value={selected.InspectionID} disabled />
+                  </div>
+                  <div>
+                    <label className="text-sm">Issue Type</label>
+                    <Textarea
+                      rows={3}
+                      value={issueType}
+                      onChange={(e) => setIssueType(e.target.value)}
+                      placeholder="Describe the issue (e.g., Leak, Corrosion)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm">Severity</label>
+                    <Select value={severity} onValueChange={setSeverity}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select severity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[
+                          "Low",
+                          "Medium",
+                          "High",
+                          "Critical",
+                        ].map((level) => (
+                          <SelectItem key={level} value={level}>
+                            {level}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={submitIssue}>
+                    {justSubmitted ? "Report Another Issue" : "Report Issue"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Button
+                variant="outline"
+                className="text-sm"
                 onClick={() => setSelected(null)}
               >
                 ← Back to list
-              </button>
-            </>
+              </Button>
+            </div>
           )}
         </div>
       </SidebarInset>

@@ -12,12 +12,191 @@ const db = mysql.createConnection({
   user: "root",
   password: "",
   database: "PIPELINE_SYSTEM",
-})
+});
 
 // Test API
 app.get("/", (req, res) => {
   res.json("Hello! This is the backend.")
 })
+
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  const q = "SELECT * FROM Login WHERE username = ?";
+
+  db.query(q, [username], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0) return res.status(401).json({ error: "User not found" });
+
+    const user = results[0];
+
+    if (user.password_hash !== password) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      role: user.role,
+      id: user.id,
+      name: user.name,
+      email: user.email
+    });
+  });
+});
+
+// Find Inspector Inspections
+app.post("/my-inspections", (req, res) => {
+  const inspectorID = req.body.inspectorID;
+
+  if (!inspectorID) {
+    return res.status(400).json({ error: "Inspector ID required" });
+  }
+
+  const q = `
+    SELECT InspectionID, PipelineID, InspectorID, SegmentID, InspectionDate, Findings
+    FROM inspection
+    WHERE InspectorID = ?
+    ORDER BY InspectionID
+  `;
+
+  db.query(q, [inspectorID], (err, rows) => {
+    if (err) {
+      console.error("DB error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(rows);
+  });
+});
+
+// Update Inspection
+app.post("/updateInspection", (req, res) => {
+  const { inspectionID, inspectionDate, findings } = req.body;
+
+  if (!inspectionID) return res.status(400).json({ error: "Missing inspection ID" });
+
+  const checkQuery = "SELECT InspectionDate, Findings FROM inspection WHERE InspectionID = ?";
+  db.query(checkQuery, [inspectionID], (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (!rows.length) return res.status(404).json({ error: "Inspection not found" });
+
+    const alreadySubmitted = rows[0].InspectionDate && rows[0].Findings;
+    if (alreadySubmitted) return res.status(409).json({ error: "Already submitted" });
+
+    const updateQuery = "UPDATE inspection SET InspectionDate = ?, Findings = ? WHERE InspectionID = ?";
+    db.query(updateQuery, [inspectionDate, findings, inspectionID], (err) => {
+      if (err) return res.status(500).json({ error: "Update failed" });
+      res.json({ success: true, message: "Inspection updated" });
+    });
+  });
+});
+
+// Route: Get completed inspections for logged-in inspector
+app.post("/inspector/completed-inspections", (req, res) => {
+  const { inspectorID } = req.body;
+
+  if (!inspectorID) {
+    return res.status(400).json({ error: "Inspector ID is required" });
+  }
+
+  const sql = `
+    SELECT * FROM inspection
+    WHERE InspectorID = ? 
+      AND InspectionDate IS NOT NULL 
+      AND Findings IS NOT NULL
+    ORDER BY InspectionID
+  `;
+
+  db.query(sql, [inspectorID], (err, rows) => {
+    if (err) {
+      console.error("Error fetching completed inspections:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    return res.status(200).json(rows);
+  });
+});
+
+// Route: Add an issue for an inspection
+app.post("/inspector/report-issue", (req, res) => {
+  const { InspectionID, IssueType, Severity } = req.body;
+
+  if (!InspectionID || !IssueType || !Severity) {
+    return res.status(400).json({ error: "Missing fields in issue report" });
+  }
+
+  const q = `
+    INSERT INTO issue (InspectionID, IssueType, Severity)
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(q, [InspectionID, IssueType, Severity], (err, result) => {
+    if (err) {
+      console.error("Error inserting issue:", err);
+      return res.status(500).json({ error: "Database insert error" });
+    }
+
+    return res.status(201).json({ message: "Issue reported", issueID: result.insertId });
+  });
+});
+
+// POST /inspector/completed-inspections
+app.post("/inspector/completed-inspections", (req, res) => {
+  const { inspectorID } = req.body;
+  if (!inspectorID) {
+    return res.status(400).json({ error: "Inspector ID is required" });
+  }
+  const sql = `
+    SELECT
+      InspectionID,
+      PipelineID,
+      SegmentID,
+      DATE_FORMAT(InspectionDate, '%Y-%m-%d') AS InspectionDate,
+      Findings
+    FROM inspection
+    WHERE InspectorID = ?
+      AND InspectionDate IS NOT NULL
+      AND Findings IS NOT NULL
+    ORDER BY InspectionID
+  `;
+  db.query(sql, [inspectorID], (err, rows) => {
+    if (err) {
+      console.error("DB error fetching completed inspections:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(rows);
+  });
+});
+
+// GET /inspection/:id/issues
+app.get("/inspection/:id/issues", (req, res) => {
+  const inspectionID = Number(req.params.id);
+  if (!inspectionID) {
+    return res.status(400).json({ error: "Inspection ID is required" });
+  }
+  const sql = `
+    SELECT
+      IssueID,
+      IssueType,
+      Severity
+    FROM issue
+    WHERE InspectionID = ?
+    ORDER BY IssueID
+  `;
+  db.query(sql, [inspectionID], (err, rows) => {
+    if (err) {
+      console.error("DB error fetching issues:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(rows);
+  });
+});
+
+
+
 
 
 app.post("/register", (req, res) => {
@@ -413,5 +592,5 @@ app.get("/issues/:id", authenticateToken, (req, res) => {
 // Start server
 app.listen(8800, () => {
   console.log("Backend server is running on port 8800!!")
-})
+});
 

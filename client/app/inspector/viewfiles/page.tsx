@@ -1,116 +1,147 @@
 "use client";
 
-import * as React from "react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableHeader, TableRow, TableHead,
+  TableBody, TableCell, TableCaption,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
-type ReportFile = {
-  id: number;
-  fileName: string;
-  title: string;
-  createdAt: string;
-  description: string;
-};
+interface Inspection {
+  InspectionID: number;
+  PipelineID: number;
+  SegmentID: number;
+  InspectionDate: string;
+  Findings: string;
+}
+
+interface Issue {
+  IssueID: number;
+  IssueType: string;
+  Severity: string;
+}
 
 export default function ViewFilesPage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [selected, setSelected] = useState<Inspection | null>(null);
+  const [issues, setIssues] = useState<Issue[]>([]);
 
-  // Sample static data representing files (reports) from the database
-  const files: ReportFile[] = [
-    {
-      id: 1,
-      fileName: "pipeline_a_report.pdf",
-      title: "Pipeline A Inspection Report",
-      createdAt: "2025-04-01",
-      description: "Detailed inspection report for Pipeline A, section 1-5 with maintenance notes.",
-    },
-    {
-      id: 2,
-      fileName: "pipeline_b_report.pdf",
-      title: "Pipeline B Inspection Report",
-      createdAt: "2025-03-28",
-      description: "Final review of Pipeline B inspection. Valve integrity and joint wear details included.",
-    },
-    {
-      id: 3,
-      fileName: "pipeline_c_report.pdf",
-      title: "Pipeline C Inspection Report",
-      createdAt: "2025-03-20",
-      description: "Inspection overview for Pipeline C covering pump station status and scheduling info.",
-    },
-  ];
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const inspectorID = user?.id;
+    if (!inspectorID) return;
 
-  // Filter the files list based on the search query (case-insensitive)
-  const filteredFiles = files.filter((file) => {
-    const query = searchQuery.toLowerCase();
+    fetch("http://localhost:8800/inspector/completed-inspections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inspectorID }),
+    })
+      .then((res) => res.json())
+      .then((data: Inspection[]) => setInspections(data))
+      .catch((err) => console.error("Failed to fetch inspections:", err));
+  }, []);
+
+  useEffect(() => {
+    if (!selected) return;
+    fetch(`http://localhost:8800/inspection/${selected.InspectionID}/issues`)
+      .then((res) => res.json())
+      .then((data: Issue[]) => setIssues(data))
+      .catch((err) => console.error("Failed to fetch issues:", err));
+  }, [selected]);
+
+  if (!selected) {
     return (
-      file.fileName.toLowerCase().includes(query) ||
-      file.title.toLowerCase().includes(query) ||
-      file.description.toLowerCase().includes(query)
+      <SidebarProvider>
+        <AppSidebar role="inspector" />
+        <SidebarInset>
+          <SiteHeader />
+          <main className="p-8">
+            <h1 className="text-2xl font-bold mb-4">View Your Completed Work</h1>
+            <Table>
+              <TableCaption>Click a row to view issues</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Inspection ID</TableHead>
+                  <TableHead>Pipeline ID</TableHead>
+                  <TableHead>Segment ID</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inspections.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">
+                      No completed inspections found.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {inspections.map((insp) => (
+                  <TableRow
+                    key={insp.InspectionID}
+                    className="cursor-pointer hover:bg-gray-100"
+                    onClick={() => setSelected(insp)}
+                  >
+                    <TableCell>{insp.InspectionID}</TableCell>
+                    <TableCell>{insp.PipelineID}</TableCell>
+                    <TableCell>{insp.SegmentID}</TableCell>
+                    <TableCell>{insp.InspectionDate ? new Date(insp.InspectionDate).toISOString().split("T")[0] : ""}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     );
-  });
+  }
 
   return (
     <SidebarProvider>
       <AppSidebar role="inspector" />
       <SidebarInset>
         <SiteHeader />
-        <main className="flex flex-col gap-6 px-4 lg:px-6 py-8">
-          <h1 className="text-xl font-semibold">View Files</h1>
-          <div className="flex items-center gap-4">
-            <Input
-              type="search"
-              placeholder="Search reports..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-xs"
-            />
-            <Button onClick={() => setSearchQuery("")}>Clear</Button>
+        <main className="p-8 space-y-6">
+          <Button variant="outline" onClick={() => setSelected(null)}>
+            ← Back to list
+          </Button>
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">
+              Inspection #{selected.InspectionID}
+            </h2>
+            <p><strong>Pipeline:</strong> {selected.PipelineID}</p>
+            <p><strong>Segment:</strong> {selected.SegmentID}</p>
+            <p><strong>Date:</strong> {selected.InspectionDate && new Date(selected.InspectionDate).toLocaleDateString()}</p>
+            <p><strong>Findings:</strong> {selected.Findings}</p>
           </div>
-          <Table>
-            <TableCaption>
-              A list of inspection reports retrieved from the database.
-            </TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">File Name</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead>Description</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredFiles.length > 0 ? (
-                filteredFiles.map((file) => (
-                  <TableRow key={file.id}>
-                    <TableCell>{file.fileName}</TableCell>
-                    <TableCell>{file.title}</TableCell>
-                    <TableCell>{file.createdAt}</TableCell>
-                    <TableCell>{file.description}</TableCell>
+
+          <div>
+            <h3 className="text-lg font-medium mb-2">Reported Issues</h3>
+            {issues.length === 0 ? (
+              <p>No issues reported for this inspection.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Issue ID</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Severity</TableHead>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    No reports found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {issues.map((issue) => (
+                    <TableRow key={issue.IssueID}>
+                      <TableCell>{issue.IssueID}</TableCell>
+                      <TableCell>{issue.IssueType}</TableCell>
+                      <TableCell>{issue.Severity}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </main>
       </SidebarInset>
     </SidebarProvider>

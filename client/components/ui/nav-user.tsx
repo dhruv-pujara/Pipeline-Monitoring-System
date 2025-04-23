@@ -1,18 +1,10 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  LogOutIcon,
-  MoreVerticalIcon,
-} from "lucide-react";
+import { LogOutIcon, MoreVerticalIcon } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,11 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
+} from "@/components/ui/sidebar";
 } from "@/components/ui/sidebar";
 
 export function NavUser() {
@@ -52,6 +46,9 @@ export function NavUser() {
   };
 
   if (!user) return null;
+
+  // Safely get the initial from user name
+  const initial = user.name?.charAt(0) ?? "";
 
   return (
     <SidebarMenu>
