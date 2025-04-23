@@ -74,6 +74,7 @@ app.post("/my-inspections", (req, res) => {
   });
 });
 
+// Update Inspection
 app.post("/updateInspection", (req, res) => {
   const { inspectionID, inspectionDate, findings } = req.body;
 
@@ -95,9 +96,53 @@ app.post("/updateInspection", (req, res) => {
   });
 });
 
+// Route: Get completed inspections for logged-in inspector
+app.post("/inspector/completed-inspections", (req, res) => {
+  const { inspectorID } = req.body;
 
+  if (!inspectorID) {
+    return res.status(400).json({ error: "Inspector ID is required" });
+  }
 
+  const sql = `
+    SELECT * FROM inspection
+    WHERE InspectorID = ? 
+      AND InspectionDate IS NOT NULL 
+      AND Findings IS NOT NULL
+    ORDER BY InspectionID
+  `;
 
+  db.query(sql, [inspectorID], (err, rows) => {
+    if (err) {
+      console.error("Error fetching completed inspections:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    return res.status(200).json(rows);
+  });
+});
+
+// Route: Add an issue for an inspection
+app.post("/inspector/report-issue", (req, res) => {
+  const { InspectionID, IssueType, Severity } = req.body;
+
+  if (!InspectionID || !IssueType || !Severity) {
+    return res.status(400).json({ error: "Missing fields in issue report" });
+  }
+
+  const q = `
+    INSERT INTO issue (InspectionID, IssueType, Severity)
+    VALUES (?, ?, ?)
+  `;
+
+  db.query(q, [InspectionID, IssueType, Severity], (err, result) => {
+    if (err) {
+      console.error("Error inserting issue:", err);
+      return res.status(500).json({ error: "Database insert error" });
+    }
+
+    return res.status(201).json({ message: "Issue reported", issueID: result.insertId });
+  });
+});
 
 
 
