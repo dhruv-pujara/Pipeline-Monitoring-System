@@ -332,7 +332,6 @@ export function UpdateUserForm() {
         <Input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" />
         <Input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="Phone" />
         <Input name="password" type="text" value={form.password} onChange={handleChange} placeholder="Password" />
-        <Label>Role</Label>
         <Select value={form.role} onValueChange={(val) => setForm(prev => ({ ...prev, role: val }))}>
           <SelectTrigger id="role" name="role">
             <SelectValue placeholder="Select a role" />
