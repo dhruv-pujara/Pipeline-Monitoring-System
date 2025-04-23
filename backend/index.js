@@ -144,6 +144,59 @@ app.post("/inspector/report-issue", (req, res) => {
   });
 });
 
+// POST /inspector/completed-inspections
+app.post("/inspector/completed-inspections", (req, res) => {
+  const { inspectorID } = req.body;
+  if (!inspectorID) {
+    return res.status(400).json({ error: "Inspector ID is required" });
+  }
+  const sql = `
+    SELECT
+      InspectionID,
+      PipelineID,
+      SegmentID,
+      DATE_FORMAT(InspectionDate, '%Y-%m-%d') AS InspectionDate,
+      Findings
+    FROM inspection
+    WHERE InspectorID = ?
+      AND InspectionDate IS NOT NULL
+      AND Findings IS NOT NULL
+    ORDER BY InspectionID
+  `;
+  db.query(sql, [inspectorID], (err, rows) => {
+    if (err) {
+      console.error("DB error fetching completed inspections:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(rows);
+  });
+});
+
+// GET /inspection/:id/issues
+app.get("/inspection/:id/issues", (req, res) => {
+  const inspectionID = Number(req.params.id);
+  if (!inspectionID) {
+    return res.status(400).json({ error: "Inspection ID is required" });
+  }
+  const sql = `
+    SELECT
+      IssueID,
+      IssueType,
+      Severity
+    FROM issue
+    WHERE InspectionID = ?
+    ORDER BY IssueID
+  `;
+  db.query(sql, [inspectionID], (err, rows) => {
+    if (err) {
+      console.error("DB error fetching issues:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.json(rows);
+  });
+});
+
+
 
 
 // Register User (Signup)

@@ -106,7 +106,7 @@ export default function ReportsPage() {
         <div className="p-8 flex flex-col gap-6">
           {!selected ? (
             <>
-              <h1 className="text-2xl font-bold">Completed Inspections</h1>
+              <h1 className="text-2xl font-bold">Report Issues for your Inspections</h1>
               <Table>
                 <TableCaption>Click to report an issue</TableCaption>
                 <TableHeader>
@@ -219,7 +219,7 @@ export default function ReportsPage() {
                     </Select>
                   </div>
                   <Button onClick={submitIssue}>
-                    {justSubmitted ? "Report Another Issue" : "Submit Issue"}
+                    {justSubmitted ? "Report Another Issue" : "Report Issue"}
                   </Button>
                 </CardContent>
               </Card>
