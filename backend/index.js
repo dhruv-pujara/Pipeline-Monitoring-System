@@ -260,9 +260,9 @@ app.get("/inspections", authenticateToken, (req, res) => {
   })
 })
 
-
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role } = req.body;
+
   const q = "SELECT * FROM Login WHERE username = ?";
 
   db.query(q, [username], (err, results) => {
@@ -273,6 +273,10 @@ app.post("/login", (req, res) => {
 
     if (user.password_hash !== password) {
       return res.status(401).json({ error: "Invalid password" });
+    }
+
+    if (user.role.toLowerCase() !== role.toLowerCase()) {
+      return res.status(403).json({ error: "Incorrect role for this account" });
     }
 
     const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", {
@@ -292,6 +296,7 @@ app.post("/login", (req, res) => {
 
 
 
+
 // To get all users in the database
 app.get("/users", (req, res) => {
   const q1 = "SELECT id, name, username, email, phone, password_hash AS password, role, created_at FROM Login ORDER BY id";
@@ -305,32 +310,6 @@ app.get("/users", (req, res) => {
 });
 
 
-// To update users login information
-// app.post("/update", (req, res) => {
-//   const { id, name, username, email, phone, password, role } = req.body;
-//   const q = `
-//     UPDATE Login
-//     SET 
-//       name = ?, 
-//       username = ?, 
-//       email = ?, 
-//       phone = ?, 
-//       password_hash = ?, 
-//       role = ?
-//     WHERE id = ?
-//   `;
-
-//   const values = [name, username, email, phone, password, role, id];
-
-//   db.query(q, values, (err, result) => {
-//     if (err) {
-//       console.error("Error updating user:", err);
-//       return res.status(500).json({ message: "Database error" });
-//     }
-
-//     res.status(200).json({ message: "User updated successfully" });
-//   });
-// });
 
 app.post("/update", (req, res) => {
   const { id, name, username, email, phone, password, role } = req.body;
