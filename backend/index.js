@@ -67,7 +67,7 @@ app.get("/inspections", authenticateToken, (req, res) => {
   
   db.query(q, (err, results) => {
     if (err) return res.status(500).json(err)
-    return res.status(200).json(results)  // Send the inspection data to the frontend
+    return res.status(200).json(results)
   })
 })
 
