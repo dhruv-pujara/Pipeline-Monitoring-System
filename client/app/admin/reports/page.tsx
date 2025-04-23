@@ -63,7 +63,7 @@ export default function ViewFilesPage() {
 
   return (
     <SidebarProvider>
-      <AppSidebar role="owner" />
+      <AppSidebar role="admin" />
       <SidebarInset>
         <SiteHeader />
         <main className="flex flex-col gap-6 px-4 lg:px-6 py-8 min-h-screen">
