@@ -1,119 +1,85 @@
-'use client'
 
+
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const router = useRouter()
   const [role, setRole] = useState<string | undefined>()
-  const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-  
-  //   try {
-  //     const res = await fetch("http://localhost:8800/login", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         username,
-  //         password,
-  //       }),
-  //     })
-  
-  //     const data = await res.json()
-  
-  //     if (!res.ok) {
-  //       alert(data.error || "Login failed")
-  //       return
-  //     }
-  
-  //     localStorage.setItem("token", data.token)
-  //     alert("Login successful")
-  
-  //     // Redirect based on data.role from the backend (NOT the dropdown selection)
-  //     if (data.role === "Admin") {
-  //       router.push("/admin")
-  //     } else if (data.role === "Owner") {
-  //       router.push("/owner")
-  //     } else if (data.role === "Inspector") {
-  //       router.push("/inspector")
-  //     } else {
-  //       alert("Unknown role, please contact admin.")
-  //     }
-  
-  //   } catch (err) {
-  //     console.error("Login error:", err)
-  //     alert("Something went wrong.")
-  //   }
-  // }
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogMessage, setDialogMessage] = useState("")
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-  
+
     try {
       const res = await fetch("http://localhost:8800/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-          role,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, role }),
       })
-  
+
       const data = await res.json()
-  
+
       if (!res.ok) {
-        alert(data.error || "Login failed")
+        setDialogMessage(data.error || "Login failed")
+        setDialogOpen(true)
         return
       }
-  
-      // Store full user object in localStorage
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: data.id,          // from backend
-          name: data.name,      // from backend
-          email: data.email     // from backend
-        })
-      )
+
+      localStorage.setItem("user", JSON.stringify({
+        id: data.id,
+        name: data.name,
+        email: data.email,
+      }))
       localStorage.setItem("token", data.token)
-  
-      alert("Login successful")
-  
-      // redirect user based on role
-      if (data.role === "Admin") {
-        router.push("/admin")
-      } else if (data.role === "Owner") {
-        router.push("/owner")
-      } else if (data.role === "Inspector") {
-        router.push("/inspector")
-      } else {
-        alert("Unknown role, please contact admin.")
-      }
+
+      setDialogMessage("Login successful")
+      setDialogOpen(true)
+
+      setTimeout(() => {
+        setDialogOpen(false)
+        if (data.role === "Admin") router.push("/admin")
+        else if (data.role === "Owner") router.push("/owner")
+        else if (data.role === "Inspector") router.push("/inspector")
+        else {
+          setDialogMessage("Unknown role, please contact admin.")
+          setDialogOpen(true)
+        }
+      }, 1000)
+
     } catch (err) {
       console.error("Login error:", err)
-      alert("Something went wrong.")
+      setDialogMessage("Something went wrong.")
+      setDialogOpen(true)
     }
   }
-  
-  
-
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -143,10 +109,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="usernam">Username</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  type="username"
+                  type="text"
                   placeholder="john.doe"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -155,10 +121,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               </div>
 
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -167,6 +130,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                   required
                 />
               </div>
+
               <Button type="submit" className="w-full">
                 Login
               </Button>
@@ -176,7 +140,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
           <div className="relative hidden bg-muted md:block">
             <img
               src="/pipeline.jpg"
-              alt="Image"
+              alt="Pipeline background"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>
@@ -187,6 +151,27 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.
       </div>
+
+      {/* Alert Dialog for messages */}
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Login Status</AlertDialogTitle>
+            <AlertDialogDescription>{dialogMessage}</AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {dialogMessage !== "Login successful" && (
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDialogOpen(false)}>
+                Close
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => setDialogOpen(false)}>
+                OK
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
