@@ -136,6 +136,14 @@ function CreateUserForm() {
       const data = await res.json()
       if (res.ok) {
         alert("User registered successfully")
+        setForm({
+          name: "",
+          username: "",
+          email: "",
+          phone: "",
+          password: "",
+          role: "",
+        });
       } else {
         alert("Error: " + (data.message || "Something went wrong"))
       }
@@ -278,6 +286,15 @@ function UpdateUserForm() {
 
       if (res.ok) {
         alert(data.message);
+        setForm({
+          id: '',
+          name: '',
+          username: '',
+          email: '',
+          phone: '',
+          password: '',
+          role: '',
+        });
       } else {
         alert(data.message || 'Update failed');
       }
@@ -333,9 +350,22 @@ function UpdateUserForm() {
                 <TableCell>{u.role}</TableCell>
                 <TableCell>{(u as any).created_at || '-'}</TableCell>
                 <TableCell>
-                  <Button onClick={() => setForm({ ...u })}>
-                    Edit
-                  </Button>
+                <Button
+  onClick={() =>
+    setForm({
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      email: u.email,
+      phone: u.phone,
+      password: u.password,
+      role: u.role,
+    })
+  }
+>
+  Edit
+</Button>
+
                 </TableCell>
               </TableRow>
             ))}
@@ -393,9 +423,9 @@ function UpdateUserForm() {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="owner">Owner</SelectItem>
-                <SelectItem value="inspector">Inspector</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="Owner">Owner</SelectItem>
+                <SelectItem value="Inspector">Inspector</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
