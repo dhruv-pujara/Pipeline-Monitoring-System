@@ -136,6 +136,14 @@ function CreateUserForm() {
       const data = await res.json()
       if (res.ok) {
         alert("User registered successfully")
+        setForm({
+          name: "",
+          username: "",
+          email: "",
+          phone: "",
+          password: "",
+          role: "",
+        });
       } else {
         alert("Error: " + (data.message || "Something went wrong"))
       }
@@ -278,6 +286,15 @@ function UpdateUserForm() {
 
       if (res.ok) {
         alert(data.message);
+        setForm({
+          id: '',
+          name: '',
+          username: '',
+          email: '',
+          phone: '',
+          password: '',
+          role: '',
+        });
       } else {
         alert(data.message || 'Update failed');
       }
