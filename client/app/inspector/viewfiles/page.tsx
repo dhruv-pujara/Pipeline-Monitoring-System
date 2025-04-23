@@ -59,7 +59,7 @@ export default function ViewFilesPage() {
         <SidebarInset>
           <SiteHeader />
           <main className="p-8">
-            <h1 className="text-2xl font-bold mb-4">Completed Inspections</h1>
+            <h1 className="text-2xl font-bold mb-4">View Your Completed Work</h1>
             <Table>
               <TableCaption>Click a row to view issues</TableCaption>
               <TableHeader>
