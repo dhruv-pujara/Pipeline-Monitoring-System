@@ -220,6 +220,38 @@ app.delete("/segments/:id", authenticateToken, (req, res) => {
   });
 });
 
+// must come after you define `authenticateToken`
+
+// list all issues
+app.get("/issues", authenticateToken, (req, res) => {
+  db.query("SELECT * FROM ISSUE", (err, rows) => {
+    if (err) {
+      console.error("Error fetching issues:", err);
+      return res.status(500).json(err);
+    }
+    res.json(rows);
+  });
+});
+
+// fetch one issue by its IssueID
+app.get("/issues/:id", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT * FROM ISSUE WHERE IssueID = ?",
+    [req.params.id],
+    (err, rows) => {
+      if (err) {
+        console.error("Error fetching issue:", err);
+        return res.status(500).json(err);
+      }
+      if (rows.length === 0) return res.status(404).json({ error: "Not found" });
+      res.json(rows[0]);
+    }
+  );
+});
+
+
+
+
 
 
 // Start server
