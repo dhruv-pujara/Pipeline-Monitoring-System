@@ -82,7 +82,8 @@ export default function ViewFilesPage() {
           {loading ? (
             <p>Loading…</p>
           ) : (
-            <div className="relative overflow-x-auto mt-6">
+            // <-- changed here: add overflow-y-auto & max-h-[500px]
+            <div className="relative overflow-x-auto overflow-y-auto-h-[500px] mt-6">
               <Table>
                 <TableCaption>A list of recent inspection reports.</TableCaption>
                 <TableHeader>
