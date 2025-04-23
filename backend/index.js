@@ -85,7 +85,6 @@ app.post("/login", (req, res) => {
   const { username, password, role } = req.body;
 
   const q = "SELECT * FROM Login WHERE username = ?";
-
   db.query(q, [username], (err, results) => {
     if (err) return res.status(500).json({ error: "Database error" });
     if (results.length === 0) return res.status(401).json({ error: "User not found" });
