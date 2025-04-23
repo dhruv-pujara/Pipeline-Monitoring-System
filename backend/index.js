@@ -566,6 +566,25 @@ app.get("/issues/:id", authenticateToken, (req, res) => {
   );
 });
 
+app.delete("/delete-inspection", (req, res) => {
+  const { id } = req.body;
+
+  if (!id) return res.status(400).json({ message: "Missing inspection ID" });
+
+  db.query("DELETE FROM Inspection WHERE InspectionID = ?", [id], (err, result) => {
+    if (err) {
+      console.error("DB Delete Error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Inspection not found" });
+    }
+
+    return res.status(200).json({ message: "Inspection deleted successfully" });
+  });
+});
+
 
 
 
