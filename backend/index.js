@@ -19,58 +19,6 @@ app.get("/", (req, res) => {
   res.json("Hello! This is the backend.")
 })
 
-// // Register User (Signup)
-// app.post("/register", (req, res) => {
-//   const { name, username, email, phone, password, role } = req.body
-//   const q = "INSERT INTO Login (`name`, `username`, `email`, `phone`, `password_hash`, `role`) VALUES (?)"
-//   const values = [name, username, email, phone, password, role]
-
-//   db.query(q, [values], (err, data) => {
-//     if (err) return res.status(500).json(err)
-//     return res.status(201).json({ message: "User registered successfully" })
-//   })
-// })
-
-// app.post("/register", (req, res) => {
-//   const { name, username, email, phone, password, role } = req.body;
-
-//   const insertLogin = `
-//     INSERT INTO Login (name, username, email, phone, password_hash, role)
-//     VALUES (?, ?, ?, ?, ?, ?)
-//   `;
-
-//   const loginValues = [name, username, email, phone, password, role];
-
-//   db.query(insertLogin, loginValues, (err, result) => {
-//     if (err) {
-//       console.error("Error inserting into Login:", err);
-//       return res.status(500).json({ error: "Failed to register user" });
-//     }
-
-//     const userId = result.insertId;
-
-//     if (role === "Inspector") {
-//       const insertInspector = `
-//         INSERT INTO Inspector (InspectorID, Name, Phone, Email)
-//         VALUES (?, ?, ?, ?)
-//       `;
-//       const inspectorValues = [userId, name, phone, email];
-
-//       db.query(insertInspector, inspectorValues, (inspectorErr) => {
-//         if (inspectorErr) {
-//           console.error("Error inserting into Inspector:", inspectorErr);
-//           return res.status(500).json({ error: "Failed to create inspector profile" });
-//         }
-
-//         return res.status(201).json({ message: "Inspector registered successfully" });
-//       });
-//     } else {
-//       return res.status(201).json({ message: "User registered successfully" });
-      
-//     }
-//   });
-// });
-
 app.post("/register", (req, res) => {
   const { name, username, email, phone, password, role } = req.body;
 
@@ -123,25 +71,6 @@ app.get("/inspections", authenticateToken, (req, res) => {
   })
 })
 
-// Login API
-// app.post("/login", (req, res) => {
-//   const { username, password } = req.body
-//   const q = "SELECT * FROM Login WHERE username = ?"
-
-//   db.query(q, [username], (err, results) => {
-//     if (err) return res.status(500).json(err)
-//     if (results.length === 0) return res.status(401).json({ error: "User not found" })
-
-//     const user = results[0]
-
-//     if (user.password_hash !== password) {
-//       return res.status(401).json({ error: "Invalid password" })
-//     }
-
-//     const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
-//     return res.status(200).json({ message: "Login successful", token, role: user.role })
-//   })
-// })
 
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
@@ -273,21 +202,44 @@ app.get("/segments", (req, res) => {
   });
 });
 
+// // Assign an inspection
+// app.post("/assign-inspection", (req, res) => {
+//   const { inspectorId, pipelineId, segmentId } = req.body;
+//   const q = `
+//     INSERT INTO Inspection (PipelineID, InspectorID, SegmentID)
+//     VALUES (?, ?, ?)
+//   `;
+//   db.query(q, [pipelineId, inspectorId, segmentId], (err, result) => {
+//     if (err) {
+//       console.error("Error assigning inspection:", err);
+//       return res.status(500).json({ message: "Failed to assign inspection" });
+//     }
+//     res.json({ message: "Inspection successfully assigned" });
+//   });
+// });
+
 // Assign an inspection
 app.post("/assign-inspection", (req, res) => {
   const { inspectorId, pipelineId, segmentId } = req.body;
+
+  const defaultDate = '0000-00-00';
+  const defaultFindings = '-';
+
   const q = `
-    INSERT INTO Inspection (PipelineID, InspectorID, SegmentID)
-    VALUES (?, ?, ?)
+    INSERT INTO Inspection (PipelineID, InspectorID, SegmentID, InspectionDate, Findings)
+    VALUES (?, ?, ?, ?, ?)
   `;
-  db.query(q, [pipelineId, inspectorId, segmentId], (err, result) => {
+
+  db.query(q, [pipelineId, inspectorId, segmentId, defaultDate, defaultFindings], (err, result) => {
     if (err) {
       console.error("Error assigning inspection:", err);
       return res.status(500).json({ message: "Failed to assign inspection" });
     }
+
     res.json({ message: "Inspection successfully assigned" });
   });
 });
+
 
 
 // Protected Dashboard Route (requires token)
