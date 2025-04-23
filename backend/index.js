@@ -95,8 +95,6 @@ app.post("/register", (req, res) => {
       `;
       const inspectorValues = [userId, name, phone, email];
 
-      console.log("🛠 Running Inspector INSERT with:", inspectorValues);
-
       db.query(insertInspector, inspectorValues, (inspectorErr) => {
         if (inspectorErr) {
         
