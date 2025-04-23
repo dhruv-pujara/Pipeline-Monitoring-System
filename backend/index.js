@@ -12,12 +12,94 @@ const db = mysql.createConnection({
   user: "root",
   password: "",
   database: "PIPELINE_SYSTEM",
-})
+});
 
 // Test API
 app.get("/", (req, res) => {
   res.json("Hello! This is the backend.")
-})
+});
+
+// Login
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  const q = "SELECT * FROM Login WHERE username = ?";
+
+  db.query(q, [username], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0) return res.status(401).json({ error: "User not found" });
+
+    const user = results[0];
+
+    if (user.password_hash !== password) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      role: user.role,
+      id: user.id,
+      name: user.name,
+      email: user.email
+    });
+  });
+});
+
+// Find Inspector Inspections
+app.post("/my-inspections", (req, res) => {
+  const inspectorID = req.body.inspectorID;
+
+  if (!inspectorID) {
+    return res.status(400).json({ error: "Inspector ID required" });
+  }
+
+  const q = `
+    SELECT InspectionID, PipelineID, InspectorID, SegmentID, InspectionDate, Findings
+    FROM inspection
+    WHERE InspectorID = ?
+    ORDER BY InspectionID
+  `;
+
+  db.query(q, [inspectorID], (err, rows) => {
+    if (err) {
+      console.error("DB error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(rows);
+  });
+});
+
+app.post("/updateInspection", (req, res) => {
+  const { inspectionID, inspectionDate, findings } = req.body;
+
+  if (!inspectionID) return res.status(400).json({ error: "Missing inspection ID" });
+
+  const checkQuery = "SELECT InspectionDate, Findings FROM inspection WHERE InspectionID = ?";
+  db.query(checkQuery, [inspectionID], (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (!rows.length) return res.status(404).json({ error: "Inspection not found" });
+
+    const alreadySubmitted = rows[0].InspectionDate && rows[0].Findings;
+    if (alreadySubmitted) return res.status(409).json({ error: "Already submitted" });
+
+    const updateQuery = "UPDATE inspection SET InspectionDate = ?, Findings = ? WHERE InspectionID = ?";
+    db.query(updateQuery, [inspectionDate, findings, inspectionID], (err) => {
+      if (err) return res.status(500).json({ error: "Update failed" });
+      res.json({ success: true, message: "Inspection updated" });
+    });
+  });
+});
+
+
+
+
+
+
 
 // Register User (Signup)
 app.post("/register", (req, res) => {
@@ -40,25 +122,6 @@ app.get("/inspections", authenticateToken, (req, res) => {
   })
 })
 
-// Login API
-app.post("/login", (req, res) => {
-  const { username, password } = req.body
-  const q = "SELECT * FROM Login WHERE username = ?"
-
-  db.query(q, [username], (err, results) => {
-    if (err) return res.status(500).json(err)
-    if (results.length === 0) return res.status(401).json({ error: "User not found" })
-
-    const user = results[0]
-
-    if (user.password_hash !== password) {
-      return res.status(401).json({ error: "Invalid password" })
-    }
-
-    const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", { expiresIn: "1h" })
-    return res.status(200).json({ message: "Login successful", token, role: user.role })
-  })
-})
 
 // To get all users in the database
 app.get("/users", (req, res) => {
@@ -221,5 +284,5 @@ app.delete("/segments/:id", authenticateToken, (req, res) => {
 // Start server
 app.listen(8800, () => {
   console.log("Backend server is running on port 8800!!")
-})
+});
 

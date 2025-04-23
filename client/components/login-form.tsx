@@ -18,6 +18,48 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
 
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+  
+  //   try {
+  //     const res = await fetch("http://localhost:8800/login", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         username,
+  //         password,
+  //       }),
+  //     })
+  
+  //     const data = await res.json()
+  
+  //     if (!res.ok) {
+  //       alert(data.error || "Login failed")
+  //       return
+  //     }
+  
+  //     localStorage.setItem("token", data.token)
+  //     alert("Login successful")
+  
+  //     // Redirect based on data.role from the backend (NOT the dropdown selection)
+  //     if (data.role === "Admin") {
+  //       router.push("/admin")
+  //     } else if (data.role === "Owner") {
+  //       router.push("/owner")
+  //     } else if (data.role === "Inspector") {
+  //       router.push("/inspector")
+  //     } else {
+  //       alert("Unknown role, please contact admin.")
+  //     }
+  
+  //   } catch (err) {
+  //     console.error("Login error:", err)
+  //     alert("Something went wrong.")
+  //   }
+  // }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
   
@@ -40,10 +82,20 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         return
       }
   
+      // Store full user object in localStorage
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.id,          // from backend
+          name: data.name,      // from backend
+          email: data.email     // from backend
+        })
+      )
       localStorage.setItem("token", data.token)
+  
       alert("Login successful")
   
-      // Redirect based on data.role from the backend (NOT the dropdown selection)
+      // redirect user based on role
       if (data.role === "Admin") {
         router.push("/admin")
       } else if (data.role === "Owner") {
@@ -53,12 +105,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       } else {
         alert("Unknown role, please contact admin.")
       }
-  
     } catch (err) {
       console.error("Login error:", err)
       alert("Something went wrong.")
     }
   }
+  
   
 
 

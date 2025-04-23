@@ -5,20 +5,11 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/ui/app-sidebar";
 import { SiteHeader } from "@/components/ui/site-header";
 import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-  TableCaption,
+  Table, TableHeader, TableRow, TableHead,
+  TableBody, TableCell, TableCaption,
 } from "@/components/ui/table";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
+  Card, CardHeader, CardTitle, CardContent, CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,30 +26,41 @@ interface Inspection {
 }
 
 export default function InspectorDashboard() {
-  // Replace with actual auth/context in production
-  const inspectorID = 201;
-
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [selected, setSelected] = useState<Inspection | null>(null);
   const [date, setDate] = useState("");
   const [findings, setFindings] = useState("");
 
-  // Fetch assigned inspections from backend
+  // Fetch assigned inspections for this inspector
   useEffect(() => {
-    fetch(`http://localhost:8800/inspections?inspectorID=${inspectorID}`)
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    fetch("http://localhost:8800/my-inspections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inspectorID: user.id }),
+    })
       .then((res) => res.json())
       .then((data: Inspection[]) => setInspections(data))
       .catch((err) => console.error("Error fetching inspections:", err));
-  }, [inspectorID]);
+  }, []);
 
-  // Update inspection Date and Findings in backend
-  async function saveField(updated: { inspectionDate?: string; findings?: string }) {
+  // Determine if selected inspection has already been submitted
+  const isSubmitted = Boolean(selected?.InspectionDate) && Boolean(selected?.Findings);
+
+  // Save date or findings
+  async function saveField(updated: {
+    inspectionDate?: string;
+    findings?: string;
+  }) {
     if (!selected) return;
+
     const payload = {
       inspectionID: selected.InspectionID,
       inspectionDate: updated.inspectionDate ?? date,
       findings: updated.findings ?? findings,
     };
+
     try {
       const res = await fetch("http://localhost:8800/updateInspection", {
         method: "POST",
@@ -66,17 +68,26 @@ export default function InspectorDashboard() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      // Reflect in UI
+
+      // Update local state
       setInspections((prev) =>
         prev.map((i) =>
           i.InspectionID === payload.inspectionID
-            ? { ...i, InspectionDate: payload.inspectionDate || null, Findings: payload.findings || null }
+            ? {
+                ...i,
+                InspectionDate: payload.inspectionDate || null,
+                Findings: payload.findings || null,
+              }
             : i
         )
       );
       setSelected((prev) =>
         prev
-          ? { ...prev, InspectionDate: payload.inspectionDate || null, Findings: payload.findings || null }
+          ? {
+              ...prev,
+              InspectionDate: payload.inspectionDate || null,
+              Findings: payload.findings || null,
+            }
           : null
       );
     } catch (err) {
@@ -85,14 +96,9 @@ export default function InspectorDashboard() {
     }
   }
 
+  // Blur handlers
   const onDateBlur = () => saveField({ inspectionDate: date });
   const onFindingsBlur = () => saveField({ findings });
-
-  const statusOf = (i: Inspection) => {
-    if (i.Findings) return "Completed";
-    if (i.InspectionDate) return "Draft";
-    return "Pending";
-  };
 
   return (
     <SidebarProvider>
@@ -101,7 +107,9 @@ export default function InspectorDashboard() {
         <SiteHeader />
         <div className="flex flex-1 flex-col p-8 space-y-6">
           <h1 className="text-2xl font-semibold">
-            {selected ? `Inspection #${selected.InspectionID}` : "Inspector Dashboard"}
+            {selected
+              ? `Inspection #${selected.InspectionID}`
+              : "Inspector Dashboard"}
           </h1>
 
           {!selected ? (
@@ -115,47 +123,41 @@ export default function InspectorDashboard() {
                     <TableHead>Pipeline</TableHead>
                     <TableHead>Segment</TableHead>
                     <TableHead>Inspector</TableHead>
-                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inspections.map((insp) => (
-                    <TableRow
-                      key={insp.InspectionID}
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setSelected(insp);
-                        setDate(insp.InspectionDate || "");
-                        setFindings(insp.Findings || "");
-                      }}
-                    >
-                      <TableCell>{insp.InspectionID}</TableCell>
-                      <TableCell>{insp.PipelineID}</TableCell>
-                      <TableCell>{insp.SegmentID}</TableCell>
-                      <TableCell>{insp.InspectorID}</TableCell>
-                      <TableCell>{statusOf(insp)}</TableCell>
-                    </TableRow>
-                  ))}
-                  {inspections.length === 0 && (
+                  {inspections.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">
+                      <TableCell colSpan={4} className="text-center">
                         No assignments.
                       </TableCell>
                     </TableRow>
+                  ) : (
+                    inspections.map((insp) => (
+                      <TableRow
+                        key={insp.InspectionID}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setSelected(insp);
+                          const formattedDate = insp.InspectionDate
+                            ? new Date(insp.InspectionDate).toISOString().split("T")[0]
+                            : "";
+                          setDate(formattedDate);
+                          setFindings(insp.Findings || "");
+                        }}
+                      >
+                        <TableCell>{insp.InspectionID}</TableCell>
+                        <TableCell>{insp.PipelineID}</TableCell>
+                        <TableCell>{insp.SegmentID}</TableCell>
+                        <TableCell>{insp.InspectorID}</TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
             </section>
           ) : (
             <section className="space-y-6">
-              <Card>
-                <CardContent>
-                  <p className="text-sm">
-                    <strong>Instructions:</strong> {selected.instructions}
-                  </p>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg font-medium">Details</CardTitle>
@@ -189,6 +191,7 @@ export default function InspectorDashboard() {
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       onBlur={onDateBlur}
+                      disabled={isSubmitted}
                     />
                   </div>
                   <div className="grid gap-1">
@@ -199,6 +202,7 @@ export default function InspectorDashboard() {
                       onChange={(e) => setFindings(e.target.value)}
                       onBlur={onFindingsBlur}
                       placeholder="Describe your findings…"
+                      disabled={isSubmitted}
                     />
                   </div>
                 </CardContent>
@@ -206,7 +210,9 @@ export default function InspectorDashboard() {
                   <Button variant="outline" onClick={() => setSelected(null)}>
                     Back
                   </Button>
-                  {date && findings ? (
+                  {isSubmitted ? (
+                    <Button disabled>Submitted</Button>
+                  ) : date && findings ? (
                     <Button onClick={() => saveField({ inspectionDate: date, findings })}>
                       Submit
                     </Button>
