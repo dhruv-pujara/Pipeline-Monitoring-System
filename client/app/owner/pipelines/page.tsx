@@ -40,6 +40,7 @@ export default function Page() {
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState("");
 
   // Pipeline form state
   const [showPipelineForm, setShowPipelineForm] = useState(false);
@@ -75,7 +76,10 @@ export default function Page() {
     LastModifiedDate: "",
   });
 
-  const token = localStorage.getItem("token") || "";
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token") || "";
+    setToken(savedToken);
+  }, []);
 
   // Fetch pipelines & segments
   const fetchData = async () => {

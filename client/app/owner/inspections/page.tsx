@@ -56,7 +56,7 @@ export default function ViewFilesPage() {
       insp.PipelineID.toString().includes(q) ||
       insp.InspectorID.toString().includes(q) ||
       insp.SegmentID.toString().includes(q) ||
-      insp.InspectionDate.substring(0, 10).includes(q) ||
+      insp.InspectionDate.substring(0,10).includes(q) ||
       insp.Findings.toLowerCase().includes(q)
     );
   });
@@ -106,7 +106,7 @@ export default function ViewFilesPage() {
                         <TableCell>{insp.InspectorID}</TableCell>
                         <TableCell>{insp.SegmentID}</TableCell>
                         <TableCell>
-                          {insp.InspectionDate.substring(0, 10)}
+                          {insp.InspectionDate.substring(0,10)}
                         </TableCell>
                         <TableCell>{insp.Findings}</TableCell>
 
@@ -127,7 +127,7 @@ export default function ViewFilesPage() {
                             </div>
                             <div className="text-sm text-muted-foreground">
                               <strong>Date:</strong>{" "}
-                              {insp.InspectionDate.substring(0, 10)}
+                              {insp.InspectionDate.substring(0,10)}
                             </div>
                             <div className="text-sm">
                               <strong>Findings:</strong> {insp.Findings}
