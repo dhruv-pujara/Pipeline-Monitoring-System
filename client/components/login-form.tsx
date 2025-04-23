@@ -72,6 +72,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         body: JSON.stringify({
           username,
           password,
+          role,
         }),
       })
   
