@@ -73,22 +73,41 @@ app.post("/my-inspections", (req, res) => {
   });
 });
 
-// Update Inspection
+// Update Inspection — only allow if *either* field is still default
 app.post("/updateInspection", (req, res) => {
   const { inspectionID, inspectionDate, findings } = req.body;
+  if (!inspectionID) {
+    return res.status(400).json({ error: "Missing inspection ID" });
+  }
 
-  if (!inspectionID) return res.status(400).json({ error: "Missing inspection ID" });
-
-  const checkQuery = "SELECT InspectionDate, Findings FROM inspection WHERE InspectionID = ?";
-  db.query(checkQuery, [inspectionID], (err, rows) => {
+  // 1) fetch current row
+  const checkSql = `
+    SELECT InspectionDate, Findings
+    FROM inspection
+    WHERE InspectionID = ?
+  `;
+  db.query(checkSql, [inspectionID], (err, rows) => {
     if (err) return res.status(500).json({ error: "DB error" });
-    if (!rows.length) return res.status(404).json({ error: "Inspection not found" });
+    if (rows.length === 0) return res.status(404).json({ error: "Inspection not found" });
 
-    const alreadySubmitted = rows[0].InspectionDate && rows[0].Findings;
-    if (alreadySubmitted) return res.status(409).json({ error: "Already submitted" });
+    const { InspectionDate: currDate, Findings: currFind } = rows[0];
 
-    const updateQuery = "UPDATE inspection SET InspectionDate = ?, Findings = ? WHERE InspectionID = ?";
-    db.query(updateQuery, [inspectionDate, findings, inspectionID], (err) => {
+    // 2) determine if both have already been set
+    const dateOverwritten    = currDate    !== "0000-00-00";
+    const findingsOverwritten = currFind !== "-";
+
+    if (dateOverwritten && findingsOverwritten) {
+      // both have non-default values → block
+      return res.status(409).json({ error: "Already submitted" });
+    }
+
+    // 3) proceed with update
+    const updateSql = `
+      UPDATE inspection
+      SET InspectionDate = ?, Findings = ?
+      WHERE InspectionID = ?
+    `;
+    db.query(updateSql, [inspectionDate, findings, inspectionID], (err) => {
       if (err) return res.status(500).json({ error: "Update failed" });
       res.json({ success: true, message: "Inspection updated" });
     });
@@ -104,21 +123,29 @@ app.post("/inspector/completed-inspections", (req, res) => {
   }
 
   const sql = `
-    SELECT * FROM inspection
-    WHERE InspectorID = ? 
-      AND InspectionDate IS NOT NULL 
-      AND Findings IS NOT NULL
+    SELECT
+      InspectionID,
+      PipelineID,
+      SegmentID,
+      InspectorID,
+      DATE_FORMAT(InspectionDate, '%Y-%m-%d') AS InspectionDate,
+      Findings
+    FROM inspection
+    WHERE InspectorID = ?
+      AND InspectionDate <> '0000-00-00'
+      AND Findings <> '-'
     ORDER BY InspectionID
   `;
 
   db.query(sql, [inspectorID], (err, rows) => {
     if (err) {
-      console.error("Error fetching completed inspections:", err);
+      console.error("DB error fetching completed inspections:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    return res.status(200).json(rows);
+    res.status(200).json(rows);
   });
 });
+
 
 // Route: Add an issue for an inspection
 app.post("/inspector/report-issue", (req, res) => {
@@ -143,12 +170,14 @@ app.post("/inspector/report-issue", (req, res) => {
   });
 });
 
+
 // POST /inspector/completed-inspections
 app.post("/inspector/completed-inspections", (req, res) => {
   const { inspectorID } = req.body;
   if (!inspectorID) {
     return res.status(400).json({ error: "Inspector ID is required" });
   }
+
   const sql = `
     SELECT
       InspectionID,
@@ -158,16 +187,17 @@ app.post("/inspector/completed-inspections", (req, res) => {
       Findings
     FROM inspection
     WHERE InspectorID = ?
-      AND InspectionDate IS NOT NULL
-      AND Findings IS NOT NULL
+      AND InspectionDate <> '0000-00-00'
+      AND Findings       <> '-'
     ORDER BY InspectionID
   `;
+
   db.query(sql, [inspectorID], (err, rows) => {
     if (err) {
       console.error("DB error fetching completed inspections:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    res.json(rows);
+    res.status(200).json(rows);
   });
 });
 
@@ -177,23 +207,23 @@ app.get("/inspection/:id/issues", (req, res) => {
   if (!inspectionID) {
     return res.status(400).json({ error: "Inspection ID is required" });
   }
+
   const sql = `
-    SELECT
-      IssueID,
-      IssueType,
-      Severity
+    SELECT IssueID, IssueType, Severity
     FROM issue
     WHERE InspectionID = ?
     ORDER BY IssueID
   `;
+
   db.query(sql, [inspectionID], (err, rows) => {
     if (err) {
       console.error("DB error fetching issues:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    res.json(rows);
+    res.status(200).json(rows);
   });
 });
+
 
 
 
