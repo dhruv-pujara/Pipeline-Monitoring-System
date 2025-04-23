@@ -19,90 +19,7 @@ app.get("/", (req, res) => {
   res.json("Hello! This is the backend.")
 })
 
-// app.post("/register", (req, res) => {
-//   const { name, username, email, phone, password, role } = req.body;
 
-//   const insertLogin = `
-//     INSERT INTO Login (name, username, email, phone, password_hash, role)
-//     VALUES (?, ?, ?, ?, ?, ?)
-//   `;
-//   const loginValues = [name, username, email, phone, password, role];
-
-//   db.query(insertLogin, loginValues, (err, result) => {
-//     if (err) {
-//       console.error("Error inserting into Login:", err);
-//       return res.status(500).json({ error: "Failed to register user" });
-//     }
-
-//     const userId = result.insertId;
-  
-//     if (role && role.toLowerCase() === "inspector") {
-//       const insertInspector = `
-//         INSERT INTO Inspector (InspectorID, Name, Phone, Email)
-//         VALUES (?, ?, ?, ?)
-//       `;
-//       const inspectorValues = [userId, name, phone, email];
-
-//       db.query(insertInspector, inspectorValues, (inspectorErr) => {
-//         if (inspectorErr) {
-        
-//           return res.status(500).json({ error: "Failed to create inspector profile" });
-//         }
-//         return res.status(201).json({ message: "Inspector registered successfully" });
-//       });
-//     } else {
-//       return res.status(201).json({ message: "User registered successfully" });
-//     }
-//   });
-// });
-
-// app.post("/register", (req, res) => {
-//   const { name, username, email, phone, password, role } = req.body;
-
-//   const insertLogin = `
-//     INSERT INTO Login (name, username, email, phone, password_hash, role)
-//     VALUES (?, ?, ?, ?, ?, ?)
-//   `;
-//   const loginValues = [name, username, email, phone, password, role];
-
-//   db.query(insertLogin, loginValues, (err, result) => {
-//     if (err) {
-//       // Detailed error messages for duplicate entries
-//       if (err.code === 'ER_DUP_ENTRY') {
-//         if (err.sqlMessage.includes('username')) {
-//           return res.status(400).json({ message: "Username already exists" });
-//         }
-//         if (err.sqlMessage.includes('email')) {
-//           return res.status(400).json({ message: "Email already exists" });
-//         }
-//         return res.status(400).json({ message: "Duplicate entry" });
-//       }
-
-//       console.error("Error inserting into Login:", err);
-//       return res.status(500).json({ message: "Server error during registration" });
-//     }
-
-//     const userId = result.insertId;
-
-//     if (role.toLowerCase() === "inspector") {
-//       const insertInspector = `
-//         INSERT INTO Inspector (InspectorID, Name, Phone, Email)
-//         VALUES (?, ?, ?, ?)
-//       `;
-//       const inspectorValues = [userId, name, phone, email];
-
-//       db.query(insertInspector, inspectorValues, (inspectorErr) => {
-//         if (inspectorErr) {
-//           return res.status(500).json({ message: "User created, but failed to register inspector info" });
-//         }
-
-//         return res.status(201).json({ message: "Inspector registered successfully" });
-//       });
-//     } else {
-//       return res.status(201).json({ message: "User registered successfully" });
-//     }
-//   });
-// });
 app.post("/register", (req, res) => {
   const { name, username, email, phone, password, role } = req.body;
 
@@ -127,7 +44,7 @@ app.post("/register", (req, res) => {
         }
         return res.status(400).json({ message: "Duplicate entry detected" });
       }
-
+      //Debug
       console.error("Error inserting into Login:", err);
       return res.status(500).json({ message: "Server error during registration" });
     }
@@ -210,8 +127,35 @@ app.get("/users", (req, res) => {
 
 
 // To update users login information
+// app.post("/update", (req, res) => {
+//   const { id, name, username, email, phone, password, role } = req.body;
+//   const q = `
+//     UPDATE Login
+//     SET 
+//       name = ?, 
+//       username = ?, 
+//       email = ?, 
+//       phone = ?, 
+//       password_hash = ?, 
+//       role = ?
+//     WHERE id = ?
+//   `;
+
+//   const values = [name, username, email, phone, password, role, id];
+
+//   db.query(q, values, (err, result) => {
+//     if (err) {
+//       console.error("Error updating user:", err);
+//       return res.status(500).json({ message: "Database error" });
+//     }
+
+//     res.status(200).json({ message: "User updated successfully" });
+//   });
+// });
+
 app.post("/update", (req, res) => {
   const { id, name, username, email, phone, password, role } = req.body;
+
   const q = `
     UPDATE Login
     SET 
@@ -232,9 +176,14 @@ app.post("/update", (req, res) => {
       return res.status(500).json({ message: "Database error" });
     }
 
-    res.status(200).json({ message: "User updated successfully" });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found or no changes made" });
+    }
+
+    return res.status(200).json({ message: "User updated successfully" });
   });
 });
+
 
 // To delete a user 
 app.post("/delete", (req, res) => {
