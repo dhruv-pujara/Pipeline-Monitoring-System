@@ -20,9 +20,9 @@ app.get("/", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  const q = "SELECT * FROM Login WHERE username = ?";
+  const { username, password, role } = req.body;
 
+  const q = "SELECT * FROM Login WHERE username = ?";
   db.query(q, [username], (err, results) => {
     if (err) return res.status(500).json({ error: "Database error" });
     if (results.length === 0) return res.status(401).json({ error: "User not found" });
@@ -31,6 +31,10 @@ app.post("/login", (req, res) => {
 
     if (user.password_hash !== password) {
       return res.status(401).json({ error: "Invalid password" });
+    }
+
+    if (user.role.toLowerCase() !== role.toLowerCase()) {
+      return res.status(403).json({ error: "Incorrect role for this account" });
     }
 
     const token = jwt.sign({ id: user.id, role: user.role }, "your_jwt_secret", {
